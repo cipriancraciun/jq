@@ -19,6 +19,7 @@ docs/content/2.download/source/*
 # Autotools junk
 .libs
 .deps
+.dirstamp
 libtool
 *.log
 stamp-h1
