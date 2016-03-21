@@ -88,7 +88,7 @@ src/main.c: src/version.h
 
 bin_PROGRAMS = jq
 jq_SOURCES = src/main.c src/version.h
-jq_LDFLAGS = -static-libtool-libs
+jq_LDFLAGS = -static-libtool-libs -lcrypto
 jq_LDADD = libjq.la -lm
 
 if ENABLE_ALL_STATIC

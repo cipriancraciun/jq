@@ -35,6 +35,7 @@ void *alloca (size_t);
 #include "linker.h"
 #include "locfile.h"
 #include "jv_unicode.h"
+#include <openssl/sha.h>
 
 
 static jv type_error(jv bad, const char* msg) {
@@ -1231,6 +1232,29 @@ static jv f_current_line(jq_state *jq) {
   return jq_util_input_get_current_line(jq);
 }
 
+static jv f_sha1(jq_state *jq, jv a) {
+  if (jv_get_kind(a) != JV_KIND_STRING)
+    return jv_invalid_with_msg(jv_string("sha1() requires string input"));
+  int alen = jv_string_length_bytes(jv_copy(a));
+  jv ret;
+
+  unsigned char hash[SHA_DIGEST_LENGTH];
+  SHA1((unsigned char const *) jv_string_value(a), alen, hash);
+
+  static char hexdigits[] = "0123456789abcdef";
+  char hexhash[SHA_DIGEST_LENGTH * 2 + 1];
+  for (int i = 0; i < SHA_DIGEST_LENGTH; i += 1) {
+    hexhash[i * 2 + 0] = hexdigits[(hash[i] & 0xf0) >> 4];
+    hexhash[i * 2 + 1] = hexdigits[(hash[i] & 0x0f) >> 0];
+  }
+  hexhash[SHA_DIGEST_LENGTH * 2] = '\0';
+
+  ret = jv_string_sized(hexhash, SHA_DIGEST_LENGTH * 2);
+
+  jv_free(a);
+  return ret;
+}
+
 #define LIBM_DD(name) \
   {(cfunction_ptr)f_ ## name, "_" #name, 1},
 #define LIBM_DD_NO(name)
@@ -1304,6 +1328,7 @@ static const struct cfunction function_list[] = {
   {(cfunction_ptr)f_now, "now", 1},
   {(cfunction_ptr)f_current_filename, "input_filename", 1},
   {(cfunction_ptr)f_current_line, "input_line_number", 1},
+  {(cfunction_ptr)f_sha1, "sha1", 1},
 };
 #undef LIBM_DDD_NO
 #undef LIBM_DD_NO
