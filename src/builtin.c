@@ -1586,7 +1586,7 @@ static const struct cfunction function_list[] = {
 #ifdef HAVE_LGAMMA_R
   {(cfunction_ptr)f_lgamma_r,"lgamma_r", 1},
 #endif
-#include "_extensions/builtins.h"
+#include "_extensions/all_builtins.h"
   {(cfunction_ptr)f_plus, "_plus", 3},
   {(cfunction_ptr)f_negate, "_negate", 1},
   {(cfunction_ptr)f_minus, "_minus", 3},
