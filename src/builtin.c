@@ -1231,6 +1231,8 @@ static jv f_current_line(jq_state *jq) {
   return jq_util_input_get_current_line(jq);
 }
 
+#include "_extensions.h"
+
 #define LIBM_DD(name) \
   {(cfunction_ptr)f_ ## name, "_" #name, 1},
 #define LIBM_DD_NO(name)
@@ -1241,6 +1243,7 @@ static jv f_current_line(jq_state *jq) {
 
 static const struct cfunction function_list[] = {
 #include "libm.h"
+#include "_extensions_builtins.h"
   {(cfunction_ptr)f_plus, "_plus", 3},
   {(cfunction_ptr)f_negate, "_negate", 1},
   {(cfunction_ptr)f_minus, "_minus", 3},
