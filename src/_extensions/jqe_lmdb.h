@@ -1,15 +1,11 @@
-#ifndef EXTENSIONS_H
-#define EXTENSIONS_H
+#ifndef JQE_LMDB_H
+#define JQE_LMDB_H
 
-#include "jq.h"
+
+#include "../jq.h"
+#include "../jv.h"
+
 #include <stdbool.h>
-
-
-
-
-extern jv jqe_hello (jq_state *jq, jv input);
-
-
 
 
 typedef struct jqe_lmdb jqe_lmdb;
@@ -39,14 +35,6 @@ extern jv jqe_lmdb_keys_0 (jqe_lmdb * lmdb, bool encode);
 
 
 extern jv jqe_lmdb_resolve (jq_state * jq, jv path, jqe_lmdb * * lmdb);
-
-
-
-
-extern jv jve_string_input (jv value, bool encode);
-extern jv jve_string_output (jv value, bool decode);
-
-
 
 
 #endif

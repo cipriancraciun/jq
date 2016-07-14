@@ -1,6 +1,4 @@
 
-{ (cfunction_ptr) jqe_hello, "_jqe_hello", 1 },
-
 { (cfunction_ptr) jqe_lmdb_select, "lmdb_select", 3 },
 { (cfunction_ptr) jqe_lmdb_select_ll, "lmdb_select_ll", 5 },
 

@@ -1561,7 +1561,7 @@ static jv f_current_line(jq_state *jq, jv a) {
   return jq_util_input_get_current_line(jq);
 }
 
-#include "_extensions.h"
+#include "_extensions/all.h"
 
 #define LIBM_DD(name) \
   {(cfunction_ptr)f_ ## name,  #name, 1},
@@ -1586,7 +1586,7 @@ static const struct cfunction function_list[] = {
 #ifdef HAVE_LGAMMA_R
   {(cfunction_ptr)f_lgamma_r,"lgamma_r", 1},
 #endif
-#include "_extensions_builtins.h"
+#include "_extensions/builtins.h"
   {(cfunction_ptr)f_plus, "_plus", 3},
   {(cfunction_ptr)f_negate, "_negate", 1},
   {(cfunction_ptr)f_minus, "_minus", 3},
