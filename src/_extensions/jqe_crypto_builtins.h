@@ -1,4 +1,5 @@
 
+
 { (cfunction_ptr) jqe_crypto_md5, "crypto_md5", 1 },
 { (cfunction_ptr) jqe_crypto_md5_ll, "crypto_md5_ll", 2 },
 
@@ -16,4 +17,8 @@
 
 { (cfunction_ptr) jqe_crypto_sha512, "crypto_sha512", 1 },
 { (cfunction_ptr) jqe_crypto_sha512_ll, "crypto_sha512_ll", 2 },
+
+
+{ (cfunction_ptr) jqe_crypto_random, "crypto_random", 1 },
+
 
