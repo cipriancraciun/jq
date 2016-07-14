@@ -1243,7 +1243,7 @@ static jv f_current_line(jq_state *jq) {
 
 static const struct cfunction function_list[] = {
 #include "libm.h"
-#include "_extensions/builtins.h"
+#include "_extensions/all_builtins.h"
   {(cfunction_ptr)f_plus, "_plus", 3},
   {(cfunction_ptr)f_negate, "_negate", 1},
   {(cfunction_ptr)f_minus, "_minus", 3},

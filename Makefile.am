@@ -15,15 +15,20 @@ LIBJQ_SRC = src/builtin.c src/bytecode.c src/compile.c src/execute.c    \
 
 
 LIBJQ_INCS += \
-        src/_extensions/builtins.h \
-        src/_extensions/jve.h \
-        src/_extensions/jqe_lmdb.h
+        src/_extensions/jqe_crypto.h \
+        src/_extensions/jqe_crypto_builtins.h \
+        src/_extensions/jqe_lmdb.h \
+        src/_extensions/jqe_lmdb_builtins.h \
+        src/_extensions/all.h \
+        src/_extensions/all_builtins.h \
+        src/_extensions/jve.h
 
 LIBJQ_SRC += \
-        src/_extensions/jve.c \
-        src/_extensions/jqe_lmdb.c
+        src/_extensions/jqe_crypto.c \
+        src/_extensions/jqe_lmdb.c \
+        src/_extensions/jve.c
 
-JQE_LIBADD = -llmdb
+JQE_LIBADD = -llmdb -lcrypto
 JQE_LDFLAGS =
 
 
