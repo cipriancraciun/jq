@@ -5,15 +5,27 @@ LIBJQ_INCS = src/builtin.h src/bytecode.h src/compile.h                 \
         src/exec_stack.h src/jq_parser.h src/jv_alloc.h src/jv_dtoa.h   \
         src/jv_unicode.h src/jv_utf8_tables.h src/lexer.l src/libm.h    \
         src/linker.h src/locfile.h src/opcode_list.h src/parser.y       \
-        src/util.h                                                      \
-        src/_extensions.h
+        src/util.h
 
 LIBJQ_SRC = src/builtin.c src/bytecode.c src/compile.c src/execute.c    \
         src/jq_test.c src/jv.c src/jv_alloc.c src/jv_aux.c              \
         src/jv_dtoa.c src/jv_file.c src/jv_parse.c src/jv_print.c       \
         src/jv_unicode.c src/linker.c src/locfile.c src/util.c          \
-        src/_extensions.c                                               \
         ${LIBJQ_INCS}
+
+
+LIBJQ_INCS += \
+        src/_extensions/builtins.h \
+        src/_extensions/jve.h \
+        src/_extensions/jqe_lmdb.h
+
+LIBJQ_SRC += \
+        src/_extensions/jve.c \
+        src/_extensions/jqe_lmdb.c
+
+JQE_LIBADD = -llmdb
+JQE_LDFLAGS =
+
 
 ### C build options
 
@@ -48,8 +60,8 @@ AM_YFLAGS = --warnings=all -d
 
 lib_LTLIBRARIES = libjq.la
 libjq_la_SOURCES = ${LIBJQ_SRC}
-libjq_la_LIBADD = -lm
-libjq_la_LDFLAGS = -export-symbols-regex '^j[qv]_' -version-info 1:4:0
+libjq_la_LIBADD = -lm $(JQE_LIBADD)
+libjq_la_LDFLAGS = -export-symbols-regex '^j[qv]_' -version-info 1:4:0 $(JQE_LDFLAGS)
 
 include_HEADERS = src/jv.h src/jq.h
 
@@ -90,8 +102,8 @@ src/main.c: src/version.h
 
 bin_PROGRAMS = jq
 jq_SOURCES = src/main.c src/version.h
-jq_LDFLAGS = -static-libtool-libs
-jq_LDADD = libjq.la -lm -llmdb
+jq_LDFLAGS = -static-libtool-libs $(jqe_LDFLAGS)
+jq_LDADD = libjq.la -lm $(jqe_LIBADD)
 
 if ENABLE_ALL_STATIC
 jq_LDFLAGS += -all-static
