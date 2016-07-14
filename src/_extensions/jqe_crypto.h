@@ -25,4 +25,7 @@ extern jv jqe_crypto_sha512 (jq_state * jq, jv input);
 extern jv jqe_crypto_sha512_ll (jq_state * jq, jv input, jv encode);
 
 
+extern jv jqe_crypto_random (jq_state * jq, jv input);
+
+
 #endif
