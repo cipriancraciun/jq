@@ -1637,6 +1637,7 @@ static const char* const jq_builtins[] = {
   "      else .[2]"
   "      end"
   "  end;",
+#include "_extensions/all_builtins_jq.h"
 };
 #undef LIBM_DDD_NO
 #undef LIBM_DD_NO
