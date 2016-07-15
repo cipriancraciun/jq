@@ -99,6 +99,10 @@ void MurmurHash3_x86_32 ( const void * key, int len,
 
   uint32_t h1 = seed;
 
+  if (seed == MurmurHash3_UPDATE) {
+    h1 = *(uint32_t*)out;
+  }
+
   const uint32_t c1 = 0xcc9e2d51;
   const uint32_t c2 = 0x1b873593;
 
@@ -157,6 +161,13 @@ void MurmurHash3_x86_128 ( const void * key, const int len,
   uint32_t h2 = seed;
   uint32_t h3 = seed;
   uint32_t h4 = seed;
+
+  if (seed == MurmurHash3_UPDATE) {
+    h1 = ((uint32_t*)out)[0];
+    h2 = ((uint32_t*)out)[1];
+    h3 = ((uint32_t*)out)[2];
+    h4 = ((uint32_t*)out)[3];
+  }
 
   const uint32_t c1 = 0x239b961b; 
   const uint32_t c2 = 0xab0e9789;
@@ -260,6 +271,11 @@ void MurmurHash3_x64_128 ( const void * key, const int len,
 
   uint64_t h1 = seed;
   uint64_t h2 = seed;
+
+  if (seed == MurmurHash3_UPDATE) {
+    h1 = ((uint64_t*)out)[0];
+    h2 = ((uint64_t*)out)[1];
+  }
 
   const uint64_t c1 = BIG_CONSTANT(0x87c37b91114253d5);
   const uint64_t c2 = BIG_CONSTANT(0x4cf5ad432745937f);
