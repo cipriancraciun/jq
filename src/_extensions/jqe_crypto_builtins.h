@@ -21,4 +21,8 @@
 
 { (cfunction_ptr) jqe_crypto_random, "crypto_random", 1 },
 
+{ (cfunction_ptr) jqe_crypto_random_8, "crypto_random_8", 1 },
+{ (cfunction_ptr) jqe_crypto_random_16, "crypto_random_16", 1 },
+{ (cfunction_ptr) jqe_crypto_random_32, "crypto_random_32", 1 },
+
 
