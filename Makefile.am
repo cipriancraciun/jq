@@ -17,16 +17,21 @@ LIBJQ_SRC = src/builtin.c src/bytecode.c src/compile.c src/execute.c    \
 LIBJQ_INCS += \
         src/_extensions/jqe_hash.h \
         src/_extensions/jqe_hash_builtins.h \
+        src/_extensions/jqe_hash_builtins_jq.h \
         src/_extensions/jqe_random.h \
         src/_extensions/jqe_random_builtins.h \
+        src/_extensions/jqe_random_builtins_jq.h \
         src/_extensions/jqe_crypto.h \
         src/_extensions/jqe_crypto_builtins.h \
+        src/_extensions/jqe_crypto_builtins_jq.h \
         src/_extensions/jqe_lmdb.h \
         src/_extensions/jqe_lmdb_builtins.h \
+        src/_extensions/jqe_lmdb_builtins_jq.h \
         src/_extensions/_external/MurmurHash3.h \
         src/_extensions/_external/mt19937ar.h \
         src/_extensions/all.h \
         src/_extensions/all_builtins.h \
+        src/_extensions/all_builtins_jq.h \
         src/_extensions/jve.h
 
 LIBJQ_SRC += \

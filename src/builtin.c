@@ -1723,6 +1723,7 @@ static const char* const jq_builtins =
 #define LIBM_DDD_NO(name) "def " #name "(a;b): \"Error: " #name "/2 not found at build time\"|error;"
 #define LIBM_DDDD_NO(name) "def " #name "(a;b;c): \"Error: " #name "/3 not found at build time\"|error;"
 #include "libm.h"
+#include "_extensions/all_builtins_jq.h"
 #ifndef HAVE_FREXP
   "def frexp: \"Error: frexp/0 not found found at build time\"|error;"
 #endif
@@ -1734,7 +1735,6 @@ static const char* const jq_builtins =
 #endif
 ;
 
-#undef LIBM_DDDD_NO
 #undef LIBM_DDD_NO
 #undef LIBM_DD_NO
 #undef LIBM_DDDD
