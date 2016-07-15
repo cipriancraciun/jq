@@ -5,6 +5,7 @@
 #include "jve.h"
 #include "jqe_crypto.h"
 
+#include <stdint.h>
 #include <string.h>
 
 #include <openssl/md5.h>
@@ -129,4 +130,57 @@ jv jqe_crypto_random (jq_state * jq, jv input)
 		return (jv_invalid_with_msg (jv_string ("`jqe_crypto_random` failed:  error encountered while generating random data")));
 	
 	return (jve_string_hex (random_data, random_size));
+}
+
+
+
+
+static jv jqe_crypto_random_0 (unsigned int bits);
+
+jv jqe_crypto_random_8 (jq_state * jq, jv input)
+{
+	jv_free (input);
+	
+	return (jqe_crypto_random_0 (8));
+}
+
+jv jqe_crypto_random_16 (jq_state * jq, jv input)
+{
+	jv_free (input);
+	
+	return (jqe_crypto_random_0 (16));
+}
+
+jv jqe_crypto_random_32 (jq_state * jq, jv input)
+{
+	jv_free (input);
+	
+	return (jqe_crypto_random_0 (32));
+}
+
+static jv jqe_crypto_random_0 (unsigned int bits)
+{
+	union { uint8_t uint8[4]; uint16_t uint16[2]; uint32_t uint32[1]; } random_data;
+	memset (&random_data, 0, sizeof (random_data));
+	
+	if (!RAND_bytes ((unsigned char *) &random_data, sizeof (random_data)))
+		return (jv_invalid_with_msg (jv_string ("`jqe_crypto_random` failed:  error encountered while generating random data")));
+	
+	uint32_t random_value;
+	
+	switch (bits) {
+		case 8 :
+			random_value = random_data.uint8[0] ^ random_data.uint8[1] ^ random_data.uint8[2] ^ random_data.uint8[3];
+			break;
+		case 16 :
+			random_value = random_data.uint16[0] ^ random_data.uint16[1];
+			break;
+		case 32 :
+			random_value = random_data.uint32[0];
+			break;
+		default :
+			return (jv_invalid_with_msg (jv_string ("`jqe_crypto_random` failed:  assertion encountered")));
+	}
+	
+	return (jv_number (random_value));
 }
