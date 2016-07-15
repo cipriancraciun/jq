@@ -15,3 +15,10 @@ range (0; 10) | tostring | lmdb_select_ll (":/tmp/jqe-lmdb-examples"; "K" + .; "
 range (0; 10) | tostring | lmdb_exclude_ll (":/tmp/jqe-lmdb-examples"; "K" + .; true)
 lmdb_keys_ll (":/tmp/jqe-lmdb-examples"; true)
 
+
+range (0; 100000) | lmdb_include_ll (":/tmp/jqe-lmdb-examples"; 16 | crypto_random; 128 | crypto_random; false) | empty
+
+lmdb_keys_ll (":/tmp/jqe-lmdb-examples"; false) | .[] | lmdb_select_ll (":/tmp/jqe-lmdb-examples"; .; null; false) | select (. == null)
+lmdb_keys_ll (":/tmp/jqe-lmdb-examples"; false) | .[] | lmdb_exclude_ll (":/tmp/jqe-lmdb-examples"; .; false) | empty
+lmdb_keys_ll (":/tmp/jqe-lmdb-examples"; false) | .[]
+
