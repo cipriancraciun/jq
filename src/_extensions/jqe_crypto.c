@@ -17,8 +17,6 @@
 typedef unsigned char * (* jqe_crypto_hasher) (unsigned char const *, size_t, unsigned char *);
 static jv jqe_crypto_hash (jq_state * jq, jqe_crypto_hasher hasher, size_t hash_size, jv input, jv encode);
 
-static jv jqe_crypto_hexstring (void const * data, size_t size);
-
 
 
 
@@ -106,7 +104,7 @@ jv jqe_crypto_hash (jq_state * jq, jqe_crypto_hasher hasher, size_t hash_size, j
 	
 	jv_free (input);
 	
-	return (jqe_crypto_hexstring (hash_data, hash_size));
+	return (jve_string_hex (hash_data, hash_size));
 }
 
 
@@ -130,22 +128,5 @@ jv jqe_crypto_random (jq_state * jq, jv input)
 	if (!RAND_bytes (random_data, random_size))
 		return (jv_invalid_with_msg (jv_string ("`jqe_crypto_random` failed:  error encountered while generating random data")));
 	
-	return (jqe_crypto_hexstring (random_data, random_size));
-}
-
-
-
-
-static jv jqe_crypto_hexstring (void const * data, size_t size)
-{
-	static char digits[] = "0123456789abcdef";
-	
-	char text[size * 2 + 1];
-	
-	for (size_t i = 0; i < size; i++) {
-		text[i * 2 + 0] = digits[(((unsigned char const *) data)[i] & 0xf0) >> 4];
-		text[i * 2 + 1] = digits[(((unsigned char const *) data)[i] & 0x0f) >> 0];
-	}
-	
-	return (jv_string_sized (text, size * 2));
+	return (jve_string_hex (random_data, random_size));
 }
