@@ -1,0 +1,16 @@
+
+range (0; 10) | crypto_md5
+range (0; 10) | crypto_sha1
+range (0; 10) | crypto_sha224
+range (0; 10) | crypto_sha256
+range (0; 10) | crypto_sha384
+range (0; 10) | crypto_sha512
+
+range (0; 10) | 8 | crypto_random
+range (0; 10) | 16 | crypto_random
+range (0; 10) | 32 | crypto_random
+
+range (0; 10) | null | crypto_random_8
+range (0; 10) | null | crypto_random_16
+range (0; 10) | null | crypto_random_32
+

@@ -1,0 +1,15 @@
+
+range (0; 10) | hash_8
+range (0; 10) | hash_16
+range (0; 10) | hash_32
+
+range (0; 10) | hash_64
+range (0; 10) | hash_128
+
+range (0; 10) | hash_bucket_index (4)
+[range (0; 20)] | group_by (hash_bucket_index (4)) | map (join (","))
+
+range (0; 10) | hash_bucket_contains (4; 3)
+range (0; 10) | select (hash_bucket_contains (4; 3))
+[range (0; 20)] | map (select (hash_bucket_contains (4; 1))) | join (",")
+
