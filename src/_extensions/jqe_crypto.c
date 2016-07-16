@@ -91,9 +91,11 @@ jv jqe_crypto_sha512_ll (jq_state * jq, jv input, jv encode)
 
 jv jqe_crypto_hash (jq_state * jq, jqe_crypto_hasher hasher, size_t hash_size, jv input, jv encode)
 {
-	input = jve_string_input_1 (input, encode);
-	if (!jv_is_valid (input))
-		return (input);
+	if (jv_get_kind (input) != JV_KIND_STRING) {
+		input = jve_string_input_1 (input, encode);
+		if (!jv_is_valid (input))
+			return (input);
+	}
 	
 	char const * string_data = jv_string_value (jv_copy (input));
 	size_t string_size = jv_string_length_bytes (jv_copy (input));
