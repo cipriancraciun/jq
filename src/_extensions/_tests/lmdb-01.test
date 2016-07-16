@@ -1,0 +1,100 @@
+
+
+
+
+range (0; 1000) | lmdb_select_ll (":/tmp/jq-tests-lmdb-01"; 128 | crypto_random; null; false) | select (. != null)
+null
+
+range (0; 1000) | lmdb_include_ll (":/tmp/jq-tests-lmdb-01"; 128 | crypto_random; 1024 | crypto_random; false) | empty
+null
+
+lmdb_keys_ll (":/tmp/jq-tests-lmdb-01"; false) | .[] | lmdb_update_ll (":/tmp/jq-tests-lmdb-01"; .; 1024 | crypto_random; false) | empty
+null
+
+lmdb_keys_ll (":/tmp/jq-tests-lmdb-01"; false) | .[] | lmdb_exclude_ll (":/tmp/jq-tests-lmdb-01"; .; false) | empty
+null
+
+lmdb_keys_ll (":/tmp/jq-tests-lmdb-01"; false)
+null
+[]
+
+
+
+
+range (0; 1000) | 128 | crypto_random | lmdb_select (":/tmp/jq-tests-lmdb-01"; null) | select (. != null)
+null
+
+range (0; 1000) | 128 | crypto_random | lmdb_include (":/tmp/jq-tests-lmdb-01"; .) | empty
+null
+
+lmdb_keys (":/tmp/jq-tests-lmdb-01") | .[] | lmdb_update (":/tmp/jq-tests-lmdb-01"; .) | empty
+null
+
+lmdb_keys (":/tmp/jq-tests-lmdb-01") | .[] | lmdb_exclude (":/tmp/jq-tests-lmdb-01") | empty
+null
+
+lmdb_keys (":/tmp/jq-tests-lmdb-01")
+null
+[]
+
+
+
+
+"k-1" | lmdb_select (":/tmp/jq-tests-lmdb-01"; null)
+null
+null
+
+lmdb_keys (":/tmp/jq-tests-lmdb-01")
+null
+[]
+
+"v-1-a" | lmdb_include (":/tmp/jq-tests-lmdb-01"; "k-1")
+null
+"v-1-a"
+
+lmdb_keys (":/tmp/jq-tests-lmdb-01")
+null
+["k-1"]
+
+"k-1" | lmdb_select (":/tmp/jq-tests-lmdb-01"; null)
+null
+"v-1-a"
+
+lmdb_keys (":/tmp/jq-tests-lmdb-01")
+null
+["k-1"]
+
+"v-1-b" | lmdb_update (":/tmp/jq-tests-lmdb-01"; "k-1")
+null
+"v-1-b"
+
+lmdb_keys (":/tmp/jq-tests-lmdb-01")
+null
+["k-1"]
+
+"k-1" | lmdb_select (":/tmp/jq-tests-lmdb-01"; null)
+null
+"v-1-b"
+
+lmdb_keys (":/tmp/jq-tests-lmdb-01")
+null
+["k-1"]
+
+"k-1" | lmdb_exclude (":/tmp/jq-tests-lmdb-01")
+null
+"k-1"
+
+lmdb_keys (":/tmp/jq-tests-lmdb-01")
+null
+[]
+
+"k-1" | lmdb_select (":/tmp/jq-tests-lmdb-01"; null)
+null
+null
+
+lmdb_keys (":/tmp/jq-tests-lmdb-01")
+null
+[]
+
+
+
