@@ -1,0 +1,33 @@
+
+
+null | hash_8 | type | . == "number"
+null
+true
+
+null | hash_16 | type | . == "number"
+null
+true
+
+null | hash_32 | type | . == "number"
+null
+true
+
+
+null | hash_64 | type | . == "string"
+null
+true
+
+null | hash_128 | type | . == "string"
+null
+true
+
+
+null | hash_64 | length | . == 32
+null
+true
+
+null | hash_128 | length | . == 32
+null
+true
+
+
