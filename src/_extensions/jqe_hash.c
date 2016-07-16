@@ -162,16 +162,13 @@ jv jqe_hash_128_outcome (jve_hash_128_t const * hash, unsigned int bits)
 			break;
 		}
 		
-		/*
 		case 64 : {
 			uint64_t value =
 					hash->uint64[0] ^ hash->uint64[1];
-			outcome = jv_number (value);
+			outcome = jve_string_hex (&value, sizeof (value));
 			break;
 		}
-		*/
 		
-		case 64 :
 		case 128 : {
 			outcome = jve_string_hex (hash, sizeof (jve_hash_128_t));
 			break;
