@@ -34,9 +34,9 @@ static jv jqe_lmdb_data_output (MDB_val * data, bool decode);
 
 
 
-jv jqe_lmdb_select (jq_state * jq, jv input, jv path, jv value_default)
+jv jqe_lmdb_select (jq_state * jq, jv input, jv path, jv on_missing)
 {
-	return (jqe_lmdb_select_ll (jq, input, path, jv_copy (input), value_default, jv_true ()));
+	return (jqe_lmdb_select_ll (jq, input, path, jv_copy (input), on_missing, jv_true ()));
 }
 
 jv jqe_lmdb_update (jq_state * jq, jv input, jv path, jv key)
@@ -44,14 +44,14 @@ jv jqe_lmdb_update (jq_state * jq, jv input, jv path, jv key)
 	return (jqe_lmdb_update_ll (jq, input, path, key, jv_copy (input), jv_true ()));
 }
 
-jv jqe_lmdb_include (jq_state * jq, jv input, jv path, jv key)
+jv jqe_lmdb_include (jq_state * jq, jv input, jv path, jv key, jv on_existing)
 {
-	return (jqe_lmdb_include_ll (jq, input, path, key, jv_copy (input), jv_true ()));
+	return (jqe_lmdb_include_ll (jq, input, path, key, jv_copy (input), on_existing, jv_true ()));
 }
 
-jv jqe_lmdb_exclude (jq_state * jq, jv input, jv path)
+jv jqe_lmdb_exclude (jq_state * jq, jv input, jv path, jv on_missing)
 {
-	return (jqe_lmdb_exclude_ll (jq, input, path, jv_copy (input), jv_true ()));
+	return (jqe_lmdb_exclude_ll (jq, input, path, jv_copy (input), on_missing, jv_true ()));
 }
 
 jv jqe_lmdb_keys (jq_state * jq, jv input, jv path)
@@ -62,11 +62,12 @@ jv jqe_lmdb_keys (jq_state * jq, jv input, jv path)
 
 
 
-jv jqe_lmdb_select_ll (jq_state * jq, jv input, jv path, jv key, jv value_default, jv encode_)
+jv jqe_lmdb_select_ll (jq_state * jq, jv input, jv path, jv key, jv on_missing, jv encode_)
 {
-	jv outcome;
+	jv outcome = jv_invalid ();
 	
 	if ((jv_get_kind (encode_) != JV_KIND_TRUE) && (jv_get_kind (encode_) != JV_KIND_FALSE)) {
+		jv_free (outcome);
 		outcome = jv_invalid_with_msg (jv_string ("`jqe_lmdb_select` requires boolean `encode`"));
 		goto exit;
 	}
@@ -74,22 +75,23 @@ jv jqe_lmdb_select_ll (jq_state * jq, jv input, jv path, jv key, jv value_defaul
 	bool encode = jv_get_kind (encode_) == JV_KIND_TRUE;
 	
 	jqe_lmdb * lmdb;
+	jv_free (outcome);
 	outcome = jqe_lmdb_resolve (jq, jv_copy (path), &lmdb);
-	if (lmdb == NULL) {
+	if (lmdb == NULL)
 		goto exit;
-	}
 	
+	jv_free (outcome);
 	if (lmdb->multidata)
-		outcome = jqe_lmdb_load_all_0 (lmdb, jv_copy (key), jv_copy (value_default), encode);
+		outcome = jqe_lmdb_read_all_0 (lmdb, jv_copy (key), jv_copy (on_missing), encode);
 	else
-		outcome = jqe_lmdb_load_one_0 (lmdb, jv_copy (key), jv_copy (value_default), encode);
+		outcome = jqe_lmdb_read_one_0 (lmdb, jv_copy (key), jv_copy (on_missing), encode);
 	
 exit :
 	
 	jv_free (input);
 	jv_free (path);
 	jv_free (key);
-	jv_free (value_default);
+	jv_free (on_missing);
 	jv_free (encode_);
 	
 	return (outcome);
@@ -98,9 +100,10 @@ exit :
 
 jv jqe_lmdb_update_ll (jq_state * jq, jv input, jv path, jv key, jv value, jv encode_)
 {
-	jv outcome;
+	jv outcome = jv_invalid ();
 	
 	if ((jv_get_kind (encode_) != JV_KIND_TRUE) && (jv_get_kind (encode_) != JV_KIND_FALSE)) {
+		jv_free (outcome);
 		outcome = jv_invalid_with_msg (jv_string ("`jqe_lmdb_update` requires boolean `encode`"));
 		goto exit;
 	}
@@ -108,15 +111,13 @@ jv jqe_lmdb_update_ll (jq_state * jq, jv input, jv path, jv key, jv value, jv en
 	bool encode = jv_get_kind (encode_) == JV_KIND_TRUE;
 	
 	jqe_lmdb * lmdb;
+	jv_free (outcome);
 	outcome = jqe_lmdb_resolve (jq, jv_copy (path), &lmdb);
-	if (lmdb == NULL) {
+	if (lmdb == NULL)
 		goto exit;
-	}
 	
-	outcome = jqe_lmdb_store_0 (lmdb, jv_copy (key), jv_copy (value), true, encode);
-	
-	if (jv_is_valid (outcome))
-		outcome = jv_copy (input);
+	jv_free (outcome);
+	outcome = jqe_lmdb_write_0 (lmdb, jv_copy (key), jv_copy (value), true, jv_copy (input), jv_copy (input), encode);
 	
 exit :
 	
@@ -130,11 +131,12 @@ exit :
 }
 
 
-jv jqe_lmdb_include_ll (jq_state * jq, jv input, jv path, jv key, jv value, jv encode_)
+jv jqe_lmdb_include_ll (jq_state * jq, jv input, jv path, jv key, jv value, jv on_existing, jv encode_)
 {
-	jv outcome;
+	jv outcome = jv_invalid ();
 	
 	if ((jv_get_kind (encode_) != JV_KIND_TRUE) && (jv_get_kind (encode_) != JV_KIND_FALSE)) {
+		jv_free (outcome);
 		outcome = jv_invalid_with_msg (jv_string ("`jqe_lmdb_include` requires boolean `encode`"));
 		goto exit;
 	}
@@ -142,15 +144,13 @@ jv jqe_lmdb_include_ll (jq_state * jq, jv input, jv path, jv key, jv value, jv e
 	bool encode = jv_get_kind (encode_) == JV_KIND_TRUE;
 	
 	jqe_lmdb * lmdb;
+	jv_free (outcome);
 	outcome = jqe_lmdb_resolve (jq, jv_copy (path), &lmdb);
-	if (lmdb == NULL) {
+	if (lmdb == NULL)
 		goto exit;
-	}
 	
-	outcome = jqe_lmdb_store_0 (lmdb, jv_copy (key), jv_copy (value), false, encode);
-	
-	if (jv_is_valid (outcome))
-		outcome = jv_copy (input);
+	jv_free (outcome);
+	outcome = jqe_lmdb_write_0 (lmdb, jv_copy (key), jv_copy (value), false, jv_copy (input), jv_copy (on_existing), encode);
 	
 exit :
 	
@@ -158,17 +158,19 @@ exit :
 	jv_free (path);
 	jv_free (key);
 	jv_free (value);
+	jv_free (on_existing);
 	jv_free (encode_);
 	
 	return (outcome);
 }
 
 
-jv jqe_lmdb_exclude_ll (jq_state * jq, jv input, jv path, jv key, jv encode_)
+jv jqe_lmdb_exclude_ll (jq_state * jq, jv input, jv path, jv key, jv on_missing, jv encode_)
 {
-	jv outcome;
+	jv outcome = jv_invalid ();
 	
 	if ((jv_get_kind (encode_) != JV_KIND_TRUE) && (jv_get_kind (encode_) != JV_KIND_FALSE)) {
+		jv_free (outcome);
 		outcome = jv_invalid_with_msg (jv_string ("`jqe_lmdb_exclude` requires boolean `encode`"));
 		goto exit;
 	}
@@ -176,21 +178,20 @@ jv jqe_lmdb_exclude_ll (jq_state * jq, jv input, jv path, jv key, jv encode_)
 	bool encode = jv_get_kind (encode_) == JV_KIND_TRUE;
 	
 	jqe_lmdb * lmdb;
+	jv_free (outcome);
 	outcome = jqe_lmdb_resolve (jq, jv_copy (path), &lmdb);
-	if (lmdb == NULL) {
+	if (lmdb == NULL)
 		goto exit;
-	}
 	
-	outcome = jqe_lmdb_delete_0 (lmdb, jv_copy (key), encode);
-	
-	if (jv_is_valid (outcome))
-		outcome = jv_copy (input);
+	jv_free (outcome);
+	outcome = jqe_lmdb_delete_0 (lmdb, jv_copy (key), jv_copy (input), jv_copy (on_missing), encode);
 	
 exit :
 	
 	jv_free (input);
 	jv_free (path);
 	jv_free (key);
+	jv_free (on_missing);
 	jv_free (encode_);
 	
 	return (outcome);
@@ -199,9 +200,10 @@ exit :
 
 jv jqe_lmdb_keys_ll (jq_state * jq, jv input, jv path, jv encode_)
 {
-	jv outcome;
+	jv outcome = jv_invalid ();
 	
 	if ((jv_get_kind (encode_) != JV_KIND_TRUE) && (jv_get_kind (encode_) != JV_KIND_FALSE)) {
+		jv_free (outcome);
 		outcome = jv_invalid_with_msg (jv_string ("`jqe_lmdb_keys` requires boolean `encode`"));
 		goto exit;
 	}
@@ -209,11 +211,12 @@ jv jqe_lmdb_keys_ll (jq_state * jq, jv input, jv path, jv encode_)
 	bool encode = jv_get_kind (encode_) == JV_KIND_TRUE;
 	
 	jqe_lmdb * lmdb;
+	jv_free (outcome);
 	outcome = jqe_lmdb_resolve (jq, jv_copy (path), &lmdb);
-	if (lmdb == NULL) {
+	if (lmdb == NULL)
 		goto exit;
-	}
 	
+	jv_free (outcome);
 	outcome = jqe_lmdb_keys_0 (lmdb, encode);
 	
 exit :
@@ -228,57 +231,54 @@ exit :
 
 
 
-jv jqe_lmdb_load_one_0 (jqe_lmdb * lmdb, jv key, jv value_default, bool encode)
+jv jqe_lmdb_read_one_0 (jqe_lmdb * lmdb, jv key, jv on_missing, bool encode)
 {
-	jv outcome;
-	jv key_encoded = jv_null ();
+	jv outcome = jv_invalid ();
+	jv key_encoded = jv_invalid ();
 	MDB_txn * lmdb_transaction;
 	MDB_val lmdb_key;
 	MDB_val lmdb_value;
 	int mdb_outcome;
 	
 	if (!encode && (jv_get_kind (key) != JV_KIND_STRING)) {
-		outcome = jv_invalid_with_msg (jv_string ("`jqe_lmdb_load` requires string `key`"));
+		jv_free (outcome);
+		outcome = jv_invalid_with_msg (jv_string ("`jqe_lmdb_read` requires string `key`"));
 		goto exit;
 	}
 	
 	key_encoded = jqe_lmdb_data_input (&lmdb_key, jv_copy (key), encode);
 	if (!jv_is_valid (key_encoded)) {
+		jv_free (outcome);
 		outcome = jv_copy (key_encoded);
 		goto exit;
 	}
-	
-	outcome = jv_null ();
 	
 	unsigned int lmdb_transaction_flags = MDB_RDONLY;
 	
 	mdb_outcome = mdb_txn_begin (lmdb->environment, NULL, lmdb_transaction_flags, &lmdb_transaction);
 	if (mdb_outcome != 0) {
-		if (jv_is_valid (outcome))
-			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_load` failed:  error encountered while beginning transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		jv_free (outcome);
+		outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_read` failed:  error encountered while beginning transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
 		goto exit;
 	}
 	
+	jv_free (outcome);
 	mdb_outcome = mdb_get (lmdb_transaction, lmdb->database, &lmdb_key, &lmdb_value);
-	if ((mdb_outcome != 0) && (mdb_outcome != MDB_NOTFOUND)) {
-		if (jv_is_valid (outcome))
-			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_load` failed:  error encountered while reading record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
-		goto exit;
-	}
-	
 	if (mdb_outcome == 0)
 		outcome = jqe_lmdb_data_output (&lmdb_value, encode);
-	else if ((mdb_outcome == MDB_NOTFOUND) && jv_is_valid (value_default))
-		outcome = value_default;
-	else if ((mdb_outcome == MDB_NOTFOUND) && !jv_is_valid (value_default))
-		outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_load` failed:  error encountered while reading record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+	else if (mdb_outcome == MDB_NOTFOUND)
+		outcome = jv_copy (on_missing);
+	else if (mdb_outcome != MDB_NOTFOUND)
+		outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_read` failed:  error encountered while reading record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
 	else
-		outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_load` failed:  assertion encountered while reading record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_read` failed:  assertion encountered while reading record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
 	
 	mdb_outcome = mdb_txn_commit (lmdb_transaction);
 	if (mdb_outcome != 0) {
-		if (jv_is_valid (outcome))
-			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_load` failed:  error encountered while committing transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		if (jv_is_valid (outcome)) {
+			jv_free (outcome);
+			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_read` failed:  error encountered while committing transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		}
 		goto exit;
 	}
 	
@@ -286,16 +286,16 @@ exit :
 	
 	jv_free (key);
 	jv_free (key_encoded);
-	jv_free (value_default);
+	jv_free (on_missing);
 	
 	return (outcome);
 }
 
 
-jv jqe_lmdb_load_all_0 (jqe_lmdb * lmdb, jv key, jv value_default, bool encode)
+jv jqe_lmdb_read_all_0 (jqe_lmdb * lmdb, jv key, jv on_missing, bool encode)
 {
-	jv outcome;
-	jv key_encoded = jv_null ();
+	jv outcome = jv_invalid ();
+	jv key_encoded = jv_invalid ();
 	MDB_txn * lmdb_transaction;
 	MDB_cursor * lmdb_cursor;
 	MDB_val lmdb_key;
@@ -303,12 +303,14 @@ jv jqe_lmdb_load_all_0 (jqe_lmdb * lmdb, jv key, jv value_default, bool encode)
 	int mdb_outcome;
 	
 	if (!encode && (jv_get_kind (key) != JV_KIND_STRING)) {
-		outcome = jv_invalid_with_msg (jv_string ("`jqe_lmdb_load` requires string `key`"));
+		jv_free (outcome);
+		outcome = jv_invalid_with_msg (jv_string ("`jqe_lmdb_read` requires string `key`"));
 		goto exit;
 	}
 	
 	key_encoded = jqe_lmdb_data_input (&lmdb_key, jv_copy (key), encode);
 	if (!jv_is_valid (key_encoded)) {
+		jv_free (outcome);
 		outcome = jv_copy (key_encoded);
 		goto exit;
 	}
@@ -317,32 +319,40 @@ jv jqe_lmdb_load_all_0 (jqe_lmdb * lmdb, jv key, jv value_default, bool encode)
 	
 	mdb_outcome = mdb_txn_begin (lmdb->environment, NULL, lmdb_transaction_flags, &lmdb_transaction);
 	if (mdb_outcome != 0) {
-		if (jv_is_valid (outcome))
-			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_load` failed:  error encountered while beginning transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		jv_free (outcome);
+		outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_read` failed:  error encountered while beginning transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
 		goto exit;
 	}
 	
 	mdb_outcome = mdb_cursor_open (lmdb_transaction, lmdb->database, &lmdb_cursor);
-	if ((mdb_outcome != 0) && (mdb_outcome != MDB_NOTFOUND)) {
-		if (jv_is_valid (outcome))
-			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_load` failed:  error encountered while opening cursor  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
-		goto exit;
+	if (mdb_outcome != 0) {
+		if (jv_is_valid (outcome)) {
+			jv_free (outcome);
+			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_read` failed:  error encountered while opening cursor  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		}
+		goto abort_2;
 	}
 	
 	mdb_outcome = mdb_cursor_get (lmdb_cursor, &lmdb_key, NULL, MDB_SET);
 	if ((mdb_outcome != 0) && (mdb_outcome != MDB_NOTFOUND)) {
-		if (jv_is_valid (outcome))
-			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_load` failed:  error encountered while reading record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
-		goto exit;
+		if (jv_is_valid (outcome)) {
+			jv_free (outcome);
+			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_read` failed:  error encountered while reading record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		}
+		goto abort_1;
 	}
 	
 	if (mdb_outcome == MDB_NOTFOUND) {
 		
-		outcome = jv_copy (value_default);
+		jv_free (outcome);
+		outcome = jv_copy (on_missing);
 		
-	} else {
+	} else if (mdb_outcome == 0) {
 		
-		outcome = jv_array ();
+		// FIXME:  Try to better estimate outcome size!
+		
+		jv_free (outcome);
+		outcome = jv_array_sized (1024);
 		bool first = true;
 		
 		while (true) {
@@ -353,9 +363,11 @@ jv jqe_lmdb_load_all_0 (jqe_lmdb * lmdb, jv key, jv value_default, bool encode)
 				mdb_outcome = mdb_cursor_get (lmdb_cursor, &lmdb_key, &lmdb_value, MDB_NEXT_DUP);
 			first = false;
 			if ((mdb_outcome != 0) && (mdb_outcome != MDB_NOTFOUND)) {
-				if (jv_is_valid (outcome))
-					outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_load` failed:  error encountered while reading record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
-				goto exit;
+				if (jv_is_valid (outcome)) {
+					jv_free (outcome);
+					outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_read` failed:  error encountered while reading record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+				}
+				goto abort_1;
 			}
 			
 			jv value;
@@ -364,23 +376,36 @@ jv jqe_lmdb_load_all_0 (jqe_lmdb * lmdb, jv key, jv value_default, bool encode)
 			else if (mdb_outcome == MDB_NOTFOUND)
 				break;
 			else
-				value = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_load` failed:  assertion encountered while reading record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+				value = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_read` failed:  assertion encountered while reading record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
 			
-			if (jv_is_valid (key))
+			if (jv_is_valid (value)) {
 				outcome = jv_array_append (outcome, value);
-			else {
+			} else {
+				jv_free (outcome);
 				outcome = value;
-				goto exit;
+				goto abort_1;
 			}
 		}
+		
+	} else {
+		
+		jv_free (outcome);
+		outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_read` failed:  assertion encountered while reading record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		
 	}
+	
+abort_1 :
 	
 	mdb_cursor_close (lmdb_cursor);
 	
+abort_2 :
+	
 	mdb_outcome = mdb_txn_commit (lmdb_transaction);
 	if (mdb_outcome != 0) {
-		if (jv_is_valid (outcome))
-			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_load` failed:  error encountered while committing transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		if (jv_is_valid (outcome)) {
+			jv_free (outcome);
+			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_read` failed:  error encountered while committing transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		}
 		goto exit;
 	}
 	
@@ -388,71 +413,86 @@ exit :
 	
 	jv_free (key);
 	jv_free (key_encoded);
-	jv_free (value_default);
+	jv_free (on_missing);
 	
 	return (outcome);
 }
 
 
-jv jqe_lmdb_store_0 (jqe_lmdb * lmdb, jv key, jv value, bool update, bool encode)
+jv jqe_lmdb_write_0 (jqe_lmdb * lmdb, jv key, jv value, bool update, jv on_success, jv on_missupdate, bool encode)
 {
-	jv outcome;
-	jv key_encoded = jv_null ();
-	jv value_encoded = jv_null ();
+	jv outcome = jv_invalid ();
+	jv key_encoded = jv_invalid ();
+	jv value_encoded = jv_invalid ();
 	MDB_txn * lmdb_transaction;
 	MDB_val lmdb_key;
 	MDB_val lmdb_value;
 	int mdb_outcome;
 	
 	if (lmdb->multidata && update) {
-		outcome = jv_invalid_with_msg (jv_string ("`jqe_lmdb_store` does not allow update of multi-value database"));
+		jv_free (outcome);
+		outcome = jv_invalid_with_msg (jv_string ("`jqe_lmdb_write` does not allow updating multi-value database"));
 		goto exit;
 	}
 	
 	if (!encode && (jv_get_kind (key) != JV_KIND_STRING)) {
-		outcome = jv_invalid_with_msg (jv_string ("`jqe_lmdb_store` requires string `key`"));
+		jv_free (outcome);
+		outcome = jv_invalid_with_msg (jv_string ("`jqe_lmdb_write` requires string `key`"));
 		goto exit;
 	}
 	if (!encode && (jv_get_kind (value) != JV_KIND_STRING)) {
-		outcome = jv_invalid_with_msg (jv_string ("`jqe_lmdb_store` requires string `value`"));
+		jv_free (outcome);
+		outcome = jv_invalid_with_msg (jv_string ("`jqe_lmdb_write` requires string `value`"));
 		goto exit;
 	}
 	
 	key_encoded = jqe_lmdb_data_input (&lmdb_key, jv_copy (key), encode);
 	if (!jv_is_valid (key_encoded)) {
+		jv_free (outcome);
 		outcome = jv_copy (key_encoded);
 		goto exit;
 	}
 	
 	value_encoded = jqe_lmdb_data_input (&lmdb_value, jv_copy (value), encode);
 	if (!jv_is_valid (value_encoded)) {
+		jv_free (outcome);
 		outcome = jv_copy (value_encoded);
 		goto exit;
 	}
-	
-	outcome = jv_null ();
 	
 	unsigned int lmdb_transaction_flags = 0;
 	unsigned int lmdb_put_flags = (lmdb->multidata || update) ? 0 : MDB_NOOVERWRITE;
 	
 	mdb_outcome = mdb_txn_begin (lmdb->environment, NULL, lmdb_transaction_flags, &lmdb_transaction);
 	if (mdb_outcome != 0) {
-		if (jv_is_valid (outcome))
-			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_store` failed:  error encountered while beginning transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		jv_free (outcome);
+		outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_write` failed:  error encountered while beginning transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
 		goto exit;
 	}
 	
 	mdb_outcome = mdb_put (lmdb_transaction, lmdb->database, &lmdb_key, &lmdb_value, lmdb_put_flags);
-	if (mdb_outcome != 0) {
-		if (jv_is_valid (outcome))
-			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_store` failed:  error encountered while writing record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
-		goto exit;
+	if ((mdb_outcome != 0) && (mdb_outcome != MDB_KEYEXIST)) {
+		jv_free (outcome);
+		outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_write` failed:  error encountered while writing record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		goto abort;
 	}
+	
+	jv_free (outcome);
+	if (mdb_outcome == 0)
+		outcome = jv_copy (on_success);
+	else if (mdb_outcome == MDB_KEYEXIST)
+		outcome = jv_copy (on_missupdate);
+	else
+		outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_write` failed:  assertion encountered while writing record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+	
+abort :
 	
 	mdb_outcome = mdb_txn_commit (lmdb_transaction);
 	if (mdb_outcome != 0) {
-		if (jv_is_valid (outcome))
-			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_store` failed:  error encountered while committing transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		if (jv_is_valid (outcome)) {
+			jv_free (outcome);
+			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_write` failed:  error encountered while committing transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		}
 		goto exit;
 	}
 	
@@ -462,52 +502,66 @@ exit :
 	jv_free (key_encoded);
 	jv_free (value);
 	jv_free (value_encoded);
+	jv_free (on_success);
+	jv_free (on_missupdate);
 	
 	return (outcome);
 }
 
 
-jv jqe_lmdb_delete_0 (jqe_lmdb * lmdb, jv key, bool encode)
+jv jqe_lmdb_delete_0 (jqe_lmdb * lmdb, jv key, jv on_success, jv on_missing, bool encode)
 {
-	jv outcome;
-	jv key_encoded = jv_null ();
+	jv outcome = jv_invalid ();
+	jv key_encoded = jv_invalid ();
 	MDB_txn * lmdb_transaction;
 	MDB_val lmdb_key;
 	int mdb_outcome;
 	
 	if (!encode && (jv_get_kind (key) != JV_KIND_STRING)) {
+		jv_free (outcome);
 		outcome = jv_invalid_with_msg (jv_string ("`jqe_lmdb_delete` requires string `key`"));
 		goto exit;
 	}
 	
 	key_encoded = jqe_lmdb_data_input (&lmdb_key, jv_copy (key), encode);
 	if (!jv_is_valid (key_encoded)) {
+		jv_free (outcome);
 		outcome = jv_copy (key_encoded);
 		goto exit;
 	}
-	
-	outcome = jv_null ();
 	
 	unsigned int lmdb_transaction_flags = 0;
 	
 	mdb_outcome = mdb_txn_begin (lmdb->environment, NULL, lmdb_transaction_flags, &lmdb_transaction);
 	if (mdb_outcome != 0) {
-		if (jv_is_valid (outcome))
-			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_delete` failed:  error encountered while beginning transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		jv_free (outcome);
+		outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_delete` failed:  error encountered while beginning transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
 		goto exit;
 	}
 	
 	mdb_outcome = mdb_del (lmdb_transaction, lmdb->database, &lmdb_key, NULL);
-	if (mdb_outcome != 0) {
-		if (jv_is_valid (outcome))
-			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_delete` failed:  error encountered while writing record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
-		goto exit;
+	if ((mdb_outcome != 0) && (mdb_outcome != MDB_NOTFOUND)) {
+		jv_free (outcome);
+		outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_delete` failed:  error encountered while deleting record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		goto abort;
 	}
+	
+	jv_free (outcome);
+	if (mdb_outcome == 0)
+		outcome = jv_copy (on_success);
+	else if (mdb_outcome == MDB_NOTFOUND)
+		outcome = jv_copy (on_missing);
+	else
+		outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_write` failed:  assertion encountered while writing record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+	
+abort :
 	
 	mdb_outcome = mdb_txn_commit (lmdb_transaction);
 	if (mdb_outcome != 0) {
-		if (jv_is_valid (outcome))
+		if (jv_is_valid (outcome)) {
+			jv_free (outcome);
 			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_delete` failed:  error encountered while committing transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		}
 		goto exit;
 	}
 	
@@ -515,6 +569,8 @@ exit :
 	
 	jv_free (key);
 	jv_free (key_encoded);
+	jv_free (on_success);
+	jv_free (on_missing);
 	
 	return (outcome);
 }
@@ -522,38 +578,43 @@ exit :
 
 jv jqe_lmdb_keys_0 (jqe_lmdb * lmdb, bool encode)
 {
-	jv outcome;
+	jv outcome = jv_invalid ();
 	MDB_txn * lmdb_transaction;
 	MDB_cursor * lmdb_cursor;
 	MDB_val lmdb_key;
 	MDB_val lmdb_value;
 	int mdb_outcome;
 	
-	outcome = jv_array ();
-	
 	unsigned int lmdb_transaction_flags = MDB_RDONLY;
 	
 	mdb_outcome = mdb_txn_begin (lmdb->environment, NULL, lmdb_transaction_flags, &lmdb_transaction);
 	if (mdb_outcome != 0) {
-		if (jv_is_valid (outcome))
-			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_keys` failed:  error encountered while beginning transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		jv_free (outcome);
+		outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_keys` failed:  error encountered while beginning transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
 		goto exit;
 	}
 	
 	mdb_outcome = mdb_cursor_open (lmdb_transaction, lmdb->database, &lmdb_cursor);
-	if ((mdb_outcome != 0) && (mdb_outcome != MDB_NOTFOUND)) {
-		if (jv_is_valid (outcome))
-			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_keys` failed:  error encountered while opening cursor  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
-		goto exit;
+	if (mdb_outcome != 0) {
+		jv_free (outcome);
+		outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_keys` failed:  error encountered while opening cursor  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		goto abort_2;
 	}
+	
+	// FIXME:  Try to better estimate outcome size!
+	
+	jv_free (outcome);
+	outcome = jv_array_sized (1024);
 	
 	while (true) {
 		
 		mdb_outcome = mdb_cursor_get (lmdb_cursor, &lmdb_key, &lmdb_value, MDB_NEXT_NODUP);
 		if ((mdb_outcome != 0) && (mdb_outcome != MDB_NOTFOUND)) {
-			if (jv_is_valid (outcome))
+			if (jv_is_valid (outcome)) {
+				jv_free (outcome);
 				outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_keys` failed:  error encountered while reading record  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
-			goto exit;
+			}
+			goto abort_1;
 		}
 		
 		jv key;
@@ -567,17 +628,24 @@ jv jqe_lmdb_keys_0 (jqe_lmdb * lmdb, bool encode)
 		if (jv_is_valid (key))
 			outcome = jv_array_append (outcome, key);
 		else {
+			jv_free (outcome);
 			outcome = key;
-			goto exit;
+			goto abort_1;
 		}
 	}
 	
+abort_1 :
+	
 	mdb_cursor_close (lmdb_cursor);
+	
+abort_2 :
 	
 	mdb_outcome = mdb_txn_commit (lmdb_transaction);
 	if (mdb_outcome != 0) {
-		if (jv_is_valid (outcome))
+		if (jv_is_valid (outcome)) {
+			jv_free (outcome);
 			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_keys` failed:  error encountered while committing transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+		}
 		goto exit;
 	}
 	
@@ -591,7 +659,6 @@ exit :
 
 jv jqe_lmdb_resolve (jq_state * jq, jv path, jqe_lmdb * * lmdb_)
 {
-	jv outcome;
 	*lmdb_ = NULL;
 	
 	
@@ -645,7 +712,7 @@ jv jqe_lmdb_resolve (jq_state * jq, jv path, jqe_lmdb * * lmdb_)
 	MDB_txn * lmdb_transaction = NULL;
 	MDB_dbi lmdb_database = -1;
 	int mdb_outcome;
-	
+	jv outcome;
 	
 	mdb_outcome = mdb_env_create (&lmdb_environment);
 	if (mdb_outcome != 0) {
