@@ -95,8 +95,8 @@ static void usage(int code, int keep_it_short) {
 }
 
 static void die() {
-  fprintf(stderr, "Use %s --help for help with command-line options,\n", progname);
-  fprintf(stderr, "or see the jq manpage, or online docs  at https://stedolan.github.io/jq\n");
+  fprintf(stderr, "%s: Use %s --help for help with command-line options,\n", progname, progname);
+  fprintf(stderr, "%s: or see the jq manpage, or online docs  at https://stedolan.github.io/jq\n", progname);
   exit(2);
 }
 
@@ -317,7 +317,7 @@ int main(int argc, char* argv[]) {
         if (argv[i][2] != 0) { // -Lname (faster check than strlen)
             lib_search_paths = jv_array_append(lib_search_paths, jq_realpath(jv_string(argv[i]+2)));
         } else if (i >= argc - 1) {
-          fprintf(stderr, "-L takes a parameter: (e.g. -L /search/path or -L/search/path)\n");
+          fprintf(stderr, "%s: -L takes a parameter: (e.g. -L /search/path or -L/search/path)\n", progname);
           die();
         } else {
           lib_search_paths = jv_array_append(lib_search_paths, jq_realpath(jv_string(argv[i+1])));
@@ -637,11 +637,11 @@ int main(int argc, char* argv[]) {
       if (!(options & SEQ)) {
         // --seq -> errors are not fatal
         ret = 4;
-        fprintf(stderr, "parse error: %s\n", jv_string_value(msg));
+        fprintf(stderr, "%s: parse error: %s\n", progname, jv_string_value(msg));
         jv_free(msg);
         break;
       }
-      fprintf(stderr, "ignoring parse error: %s\n", jv_string_value(msg));
+      fprintf(stderr, "%s: ignoring parse error: %s\n", progname, jv_string_value(msg));
       jv_free(msg);
     }
   }
@@ -652,7 +652,7 @@ int main(int argc, char* argv[]) {
 out:
   badwrite = ferror(stdout);
   if (fclose(stdout)!=0 || badwrite) {
-    fprintf(stderr,"Error: writing output failed: %s\n", strerror(errno));
+    fprintf(stderr, "%s: Error: writing output failed: %s\n", progname, strerror(errno));
     ret = 2;
   }
 
