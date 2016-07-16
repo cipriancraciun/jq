@@ -22,7 +22,7 @@ null
 true
 
 
-null | hash_64 | length | . == 32
+null | hash_64 | length | . == 16
 null
 true
 
