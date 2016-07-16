@@ -185,7 +185,7 @@ static jvp_array* jvp_array_ptr(jv a) {
 
 static jvp_array* jvp_array_alloc(unsigned size) {
   jvp_array* a = jv_mem_alloc(sizeof(jvp_array) + sizeof(jv) * size);
-  a->refcnt.count = 1;
+  a->refcnt = JV_REFCNT_INIT;
   a->length = 0;
   a->alloc_length = size;
   return a;
@@ -440,7 +440,7 @@ static jvp_string* jvp_string_ptr(jv a) {
 
 static jvp_string* jvp_string_alloc(uint32_t size) {
   jvp_string* s = jv_mem_alloc(sizeof(jvp_string) + size + 1);
-  s->refcnt.count = 1;
+  s->refcnt = JV_REFCNT_INIT;
   s->alloc_length = size;
   return s;
 }
@@ -875,7 +875,7 @@ static jv jvp_object_new(int size) {
   jvp_object* obj = jv_mem_alloc(sizeof(jvp_object) +
                                  sizeof(struct object_slot) * size +
                                  sizeof(int) * (size * 2));
-  obj->refcnt.count = 1;
+  obj->refcnt = JV_REFCNT_INIT;
   for (int i=0; i<size; i++) {
     obj->elements[i].next = i - 1;
     obj->elements[i].string = JV_NULL;
