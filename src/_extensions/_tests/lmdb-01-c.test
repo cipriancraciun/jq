@@ -1,0 +1,103 @@
+
+
+
+
+lmdb_keys_ll (":/tmp/jq-tests-lmdb-01"; false) | length
+null
+0
+
+
+
+
+[range (0; 1000) | crypto_md5 | lmdb_select_ll (":/tmp/jq-tests-lmdb-01"; .; "error"; false) | select (. != "error")] | unique
+null
+[]
+
+lmdb_keys_ll (":/tmp/jq-tests-lmdb-01"; false) | length
+null
+0
+
+
+
+
+[range (0; 1000) | crypto_md5 | lmdb_include_ll (":/tmp/jq-tests-lmdb-01"; . ; .; "error"; false) | select (. == "error")] | unique
+null
+[]
+
+[range (0; 1000) | crypto_md5 | . as $key | lmdb_select_ll (":/tmp/jq-tests-lmdb-01"; . ; "error"; false) | select (. != $key)] | unique
+null
+[]
+
+lmdb_keys_ll (":/tmp/jq-tests-lmdb-01"; false) | length
+null
+1000
+
+(lmdb_keys_ll (":/tmp/jq-tests-lmdb-01"; false) | sort) == ([range (0; 1000) | crypto_md5] | sort)
+null
+true
+
+(lmdb_keys_ll (":/tmp/jq-tests-lmdb-01"; false) | map (lmdb_select_ll (":/tmp/jq-tests-lmdb-01"; .; "error"; false)) | sort) == ([range (0; 1000) | crypto_md5] | sort)
+null
+true
+
+[range (0; 1000) | crypto_md5 | lmdb_exclude_ll (":/tmp/jq-tests-lmdb-01"; .; "error"; false) | select (. == "error")] | unique
+null
+[]
+
+lmdb_keys_ll (":/tmp/jq-tests-lmdb-01"; false) | length
+null
+0
+
+
+
+
+[range (0; 1000) | crypto_md5 | lmdb_include_ll (":/tmp/jq-tests-lmdb-01"; . ; .; "error"; false) | select (. == "error")] | unique
+null
+[]
+
+[range (0; 1000) | crypto_md5 | . as $key | lmdb_select_ll (":/tmp/jq-tests-lmdb-01"; . ; "error"; false) | select (. != $key)] | unique
+null
+[]
+
+[range (0; 1000) | crypto_md5 | lmdb_update_ll (":/tmp/jq-tests-lmdb-01"; . ; . | crypto_sha1; false) | select (. == "error")] | unique
+null
+[]
+
+[range (0; 1000) | crypto_md5 | . as $key | lmdb_select_ll (":/tmp/jq-tests-lmdb-01"; . ; "error"; false) | select (. != ($key | crypto_sha1))] | unique
+null
+[]
+
+lmdb_keys_ll (":/tmp/jq-tests-lmdb-01"; false) | length
+null
+1000
+
+(lmdb_keys_ll (":/tmp/jq-tests-lmdb-01"; false) | sort) == ([range (0; 1000) | crypto_md5] | sort)
+null
+true
+
+(lmdb_keys_ll (":/tmp/jq-tests-lmdb-01"; false) | map (lmdb_select_ll (":/tmp/jq-tests-lmdb-01"; .; "error"; false)) | sort) == ([range (0; 1000) | crypto_md5 | crypto_sha1] | sort)
+null
+true
+
+[range (0; 1000) | crypto_md5 | lmdb_exclude_ll (":/tmp/jq-tests-lmdb-01"; .; "error"; false) | select (. == "error")] | unique
+null
+[]
+
+lmdb_keys_ll (":/tmp/jq-tests-lmdb-01"; false) | length
+null
+0
+
+
+
+
+[range (0; 1000) | crypto_md5 | lmdb_exclude_ll (":/tmp/jq-tests-lmdb-01"; .; "error"; false) | select (. != "error")] | unique
+null
+[]
+
+lmdb_keys_ll (":/tmp/jq-tests-lmdb-01"; false) | length
+null
+0
+
+
+
+
