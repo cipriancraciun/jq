@@ -70,3 +70,8 @@ null
 "0123456789abcdef"
 
 
+[range (0; 1000) | range (0; 10) | crypto_random | [., (. | crypto_md5_ll (true)), (. | crypto_md5_ll (false))] | select (.[1] != .[2])]
+null
+[]
+
+
