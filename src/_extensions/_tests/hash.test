@@ -31,3 +31,34 @@ null
 true
 
 
+[range (0; 100000) | hash_8 | select ((. < 0) or (. > 255))] | unique
+null
+[]
+
+[range (0; 100000) | hash_16 | select ((. < 0) or (. > 65535))] | unique
+null
+[]
+
+[range (0; 100000) | hash_32 | select ((. < 0) or (. > 4294967295))] | unique
+null
+[]
+
+
+[range (0; 100000) | hash_64 | length | . % 2] | unique
+null
+[0]
+
+[range (0; 100000) | hash_128 | length | . % 2] | unique
+null
+[0]
+
+
+[range (0; 1000) | hash_64 | explode | .[]] | unique | implode
+null
+"0123456789abcdef"
+
+[range (0; 1000) | hash_128 | explode | .[]] | unique | implode
+null
+"0123456789abcdef"
+
+
