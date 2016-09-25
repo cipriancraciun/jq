@@ -613,6 +613,88 @@ jv jv_string_sized(const char* str, int len) {
     jvp_string_copy_replace_bad(str, len);
 }
 
+
+// --------------------------------------------------------------------------------
+
+
+#include "./_extensions/_external/khash.h"
+
+struct jv_string_interned_key {
+  int size;
+  khint_t hash;
+  char const * data;
+};
+
+static khint_t jv_string_interned_key_hash (struct jv_string_interned_key key)
+{
+  if (key.hash != 0)
+    return (key.hash);
+  khint_t h = key.size;
+  for (int i = 0; i < key.size; i += 1)
+    h = (h << 5) - h + ((khint_t) key.data[i]);
+  return h;
+}
+
+static khint_t jv_string_interned_key_equal (struct jv_string_interned_key key_a, struct jv_string_interned_key key_b)
+{
+  if (key_a.size != key_b.size)
+    return (0);
+  if (key_a.hash != 0 && key_b.hash != 0 && key_a.hash != key_b.hash)
+    return (0);
+  return (strncmp (key_a.data, key_b.data, key_a.size) == 0);
+}
+
+
+KHASH_INIT(jv_string_interned, struct jv_string_interned_key, jv, 1, jv_string_interned_key_hash, jv_string_interned_key_equal);
+
+khash_t(jv_string_interned) * jv_string_interned_hash = NULL;
+
+
+jv jv_string_sized_2(const char * str, int len, int intern) {
+
+  if (!intern)
+    return jv_string_sized(str, len);
+
+  if (0)
+    return jv_string_sized(str, len);
+
+  if (jv_string_interned_hash == NULL)
+    jv_string_interned_hash = kh_init (jv_string_interned);
+
+  struct jv_string_interned_key key_searched = { len, 0, str };
+  key_searched.hash = jv_string_interned_key_hash (key_searched);
+
+  jv string;
+
+  khiter_t key_iterator = kh_get (jv_string_interned, jv_string_interned_hash, key_searched);
+
+  if (key_iterator == kh_end (jv_string_interned_hash)) {
+
+    string = jv_string_sized (str, len);
+    jvp_string * string_ptr = jvp_string_ptr (string);
+
+    struct jv_string_interned_key key_insert = { jvp_string_length (string_ptr), 0, string_ptr->data };
+    key_insert.hash = jv_string_interned_key_hash (key_insert);
+
+    int key_absent;
+    key_iterator = kh_put (jv_string_interned, jv_string_interned_hash, key_insert, &key_absent);
+
+    kh_value (jv_string_interned_hash, key_iterator) = string;
+
+  } else {
+
+    string = kh_value (jv_string_interned_hash, key_iterator);
+
+  }
+
+  return (jv_copy (string));
+
+}
+
+
+// --------------------------------------------------------------------------------
+
+
 jv jv_string_empty(int len) {
   return jvp_string_empty_new(len);
 }

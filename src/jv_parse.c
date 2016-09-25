@@ -461,7 +461,7 @@ static pfunc found_string(struct jv_parser* p) {
       *out++ = c;
     }
   }
-  TRY(value(p, jv_string_sized(p->tokenbuf, out - p->tokenbuf)));
+  TRY(value(p, jv_string_sized_2(p->tokenbuf, out - p->tokenbuf, 1)));
   p->tokenpos = 0;
   return 0;
 }
