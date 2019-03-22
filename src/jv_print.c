@@ -120,16 +120,29 @@ static void jvp_dump_string(jv str, int ascii_only, FILE* F, jv* S, int T) {
   const char* cstart;
   int c = 0;
   char buf[32];
-  put_char('"', F, S, T);
+  if (!(ascii_only & JV_PRINT_ASCII0)) {
+    put_char('"', F, S, T);
+  }
   while ((i = jvp_utf8_next((cstart = i), end, &c))) {
     assert(c != -1);
     int unicode_escape = 0;
     if (0x20 <= c && c <= 0x7E) {
       // printable ASCII
       if (c == '"' || c == '\\') {
-        put_char('\\', F, S, T);
+        if (c == '\\' || !(ascii_only & JV_PRINT_ASCII0)) {
+          put_char('\\', F, S, T);
+        }
       }
       put_char(c, F, S, T);
+    } else if ((ascii_only & JV_PRINT_ASCII0) && (c < 0x20 || c == 0x7F)) {
+      switch (c) {
+      case '\t':
+        put_char(c, F, S, T);
+        break;
+      default:
+        unicode_escape = 1;
+        break;
+      }
     } else if (c < 0x20 || c == 0x7F) {
       // ASCII control character
       switch (c) {
@@ -177,7 +190,9 @@ static void jvp_dump_string(jv str, int ascii_only, FILE* F, jv* S, int T) {
     }
   }
   assert(c != -1);
-  put_char('"', F, S, T);
+  if (!(ascii_only & JV_PRINT_ASCII0)) {
+    put_char('"', F, S, T);
+  }
 }
 
 static void put_refcnt(struct dtoa_context* C, int refcnt, FILE *F, jv* S, int T){
@@ -242,7 +257,7 @@ static void jv_dump_term(struct dtoa_context* C, jv x, int flags, int indent, FI
     break;
   }
   case JV_KIND_STRING:
-    jvp_dump_string(x, flags & JV_PRINT_ASCII, F, S, flags & JV_PRINT_ISATTY);
+    jvp_dump_string(x, flags & (JV_PRINT_ASCII | JV_PRINT_ASCII0), F, S, flags & JV_PRINT_ISATTY);
     if (flags & JV_PRINT_REFCOUNT)
       put_refcnt(C, refcnt, F, S, flags & JV_PRINT_ISATTY);
     break;
