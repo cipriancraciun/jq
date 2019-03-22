@@ -172,6 +172,7 @@ enum jv_print_flags {
   JV_PRINT_SPACE0   = 256,
   JV_PRINT_SPACE1   = 512,
   JV_PRINT_SPACE2   = 1024,
+  JV_PRINT_ASCII0   = 2048,
 };
 #define JV_PRINT_INDENT_FLAGS(n) \
     ((n) < 0 || (n) > 7 ? JV_PRINT_TAB | JV_PRINT_PRETTY : (n) == 0 ? 0 : (n) << 8 | JV_PRINT_PRETTY)
