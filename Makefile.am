@@ -13,6 +13,40 @@ LIBJQ_SRC = src/builtin.c src/bytecode.c src/compile.c src/execute.c    \
         src/jv_unicode.c src/linker.c src/locfile.c src/util.c          \
         ${LIBJQ_INCS}
 
+
+LIBJQ_INCS += \
+        src/_extensions/jqe_hash.h \
+        src/_extensions/jqe_hash_builtins.h \
+        src/_extensions/jqe_hash_builtins_jq.h \
+        src/_extensions/jqe_random.h \
+        src/_extensions/jqe_random_builtins.h \
+        src/_extensions/jqe_random_builtins_jq.h \
+        src/_extensions/jqe_crypto.h \
+        src/_extensions/jqe_crypto_builtins.h \
+        src/_extensions/jqe_crypto_builtins_jq.h \
+        src/_extensions/jqe_lmdb.h \
+        src/_extensions/jqe_lmdb_builtins.h \
+        src/_extensions/jqe_lmdb_builtins_jq.h \
+        src/_extensions/_external/MurmurHash3.h \
+        src/_extensions/_external/mt19937ar.h \
+        src/_extensions/all.h \
+        src/_extensions/all_builtins.h \
+        src/_extensions/all_builtins_jq.h \
+        src/_extensions/jve.h
+
+LIBJQ_SRC += \
+        src/_extensions/jqe_hash.c \
+        src/_extensions/jqe_random.c \
+        src/_extensions/jqe_crypto.c \
+        src/_extensions/jqe_lmdb.c \
+        src/_extensions/_external/MurmurHash3.c \
+        src/_extensions/_external/mt19937ar.c \
+        src/_extensions/jve.c
+
+JQE_LIBADD = -llmdb -lcrypto
+JQE_LDFLAGS =
+
+
 ### C build options
 
 AM_CFLAGS = -Wextra -Wall -Wno-missing-field-initializers	\
@@ -46,8 +80,8 @@ AM_YFLAGS = --warnings=all -d
 
 lib_LTLIBRARIES = libjq.la
 libjq_la_SOURCES = ${LIBJQ_SRC}
-libjq_la_LIBADD = -lm
-libjq_la_LDFLAGS = -export-symbols-regex '^j[qv]_' -version-info 1:4:0
+libjq_la_LIBADD = -lm $(JQE_LIBADD)
+libjq_la_LDFLAGS = -export-symbols-regex '^j[qv]_' -version-info 1:4:0 $(JQE_LDFLAGS)
 
 include_HEADERS = src/jv.h src/jq.h
 
@@ -88,8 +122,8 @@ src/main.c: src/version.h
 
 bin_PROGRAMS = jq
 jq_SOURCES = src/main.c src/version.h
-jq_LDFLAGS = -static-libtool-libs
-jq_LDADD = libjq.la -lm
+jq_LDFLAGS = -static-libtool-libs $(jqe_LDFLAGS)
+jq_LDADD = libjq.la -lm $(jqe_LIBADD)
 
 if ENABLE_ALL_STATIC
 jq_LDFLAGS += -all-static

@@ -45,7 +45,32 @@ static int jvp_refcnt_unshared(jv_refcnt* c) {
 #define KIND_MASK 0xf
 
 jv_kind jv_get_kind(jv x) {
-  return x.kind_flags & KIND_MASK;
+  jv_kind k = x.kind_flags & KIND_MASK;
+  if (1)
+    return k;
+  switch (k) {
+    case JV_KIND_NUMBER :
+      break;
+    case JV_KIND_NULL :
+    case JV_KIND_TRUE :
+    case JV_KIND_FALSE :
+      assert (x.u.ptr == NULL);
+      break;
+    case JV_KIND_INVALID :
+      if (x.u.ptr != NULL)
+        assert (x.u.ptr->count > 0);
+      break;
+    case JV_KIND_STRING :
+    case JV_KIND_ARRAY :
+    case JV_KIND_OBJECT :
+      assert (x.u.ptr != NULL);
+      assert (x.u.ptr->count > 0);
+      break;
+    default :
+      assert(0 && "invalid jv kind");
+      break;
+  };
+  return k;
 }
 
 const char* jv_kind_name(jv_kind k) {
@@ -198,13 +223,14 @@ static jv jvp_array_new(unsigned size) {
 
 static void jvp_array_free(jv a) {
   assert(jv_get_kind(a) == JV_KIND_ARRAY);
-  if (jvp_refcnt_dec(a.u.ptr)) {
+  if (jvp_refcnt_unshared(a.u.ptr)) {
     jvp_array* array = jvp_array_ptr(a);
     for (int i=0; i<array->length; i++) {
       jv_free(array->elements[i]);
     }
     jv_mem_free(array);
-  }
+  } else
+    jvp_refcnt_dec(a.u.ptr);
 }
 
 static int jvp_array_length(jv a) {
@@ -967,7 +993,7 @@ static jv* jvp_object_read(jv object, jv key) {
 
 static void jvp_object_free(jv o) {
   assert(jv_get_kind(o) == JV_KIND_OBJECT);
-  if (jvp_refcnt_dec(o.u.ptr)) {
+  if (jvp_refcnt_unshared(o.u.ptr)) {
     for (int i=0; i<jvp_object_size(o); i++) {
       struct object_slot* slot = jvp_object_get_slot(o, i);
       if (jv_get_kind(slot->string) != JV_KIND_NULL) {
@@ -976,7 +1002,8 @@ static void jvp_object_free(jv o) {
       }
     }
     jv_mem_free(jvp_object_ptr(o));
-  }
+  } else
+    jvp_refcnt_dec(o.u.ptr);
 }
 
 static jv jvp_object_rehash(jv object) {

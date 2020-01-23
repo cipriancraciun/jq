@@ -1,0 +1,24 @@
+
+range (0; 10) | lmdb_select (":/tmp/jqe-lmdb-examples"; null)
+
+range (0; 10) | lmdb_include (":/tmp/jqe-lmdb-examples"; .)
+range (0; 10) | lmdb_update (":/tmp/jqe-lmdb-examples"; .)
+lmdb_keys (":/tmp/jqe-lmdb-examples")
+range (0; 10) | lmdb_exclude (":/tmp/jqe-lmdb-examples")
+
+range (0; 10) | tostring | . as $i | ("K" + $i) as $key | ("V" + $i) as $value | $value | lmdb_include (":/tmp/jqe-lmdb-examples"; $key)
+range (0; 10) | tostring | . as $i | ("K" + $i) as $key | $key | lmdb_select (":/tmp/jqe-lmdb-examples"; "default")
+range (0; 10) | tostring | . as $i | ("K" + $i) as $key | $key | lmdb_exclude (":/tmp/jqe-lmdb-examples")
+
+range (0; 10) | tostring | lmdb_include_ll (":/tmp/jqe-lmdb-examples"; "K" + .; "V" + .; true)
+range (0; 10) | tostring | lmdb_select_ll (":/tmp/jqe-lmdb-examples"; "K" + .; "default"; true)
+range (0; 10) | tostring | lmdb_exclude_ll (":/tmp/jqe-lmdb-examples"; "K" + .; true)
+lmdb_keys_ll (":/tmp/jqe-lmdb-examples"; true)
+
+
+range (0; 100000) | lmdb_include_ll (":/tmp/jqe-lmdb-examples"; 16 | crypto_random; 128 | crypto_random; false) | empty
+
+lmdb_keys_ll (":/tmp/jqe-lmdb-examples"; false) | .[] | lmdb_select_ll (":/tmp/jqe-lmdb-examples"; .; null; false) | select (. == null)
+lmdb_keys_ll (":/tmp/jqe-lmdb-examples"; false) | .[] | lmdb_exclude_ll (":/tmp/jqe-lmdb-examples"; .; false) | empty
+lmdb_keys_ll (":/tmp/jqe-lmdb-examples"; false) | .[]
+

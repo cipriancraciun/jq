@@ -1,0 +1,38 @@
+
+
+null | random_8 | type | . == "number"
+null
+true
+
+null | random_16 | type | . == "number"
+null
+true
+
+null | random_32 | type | . == "number"
+null
+true
+
+
+null | random_real | type | . == "number"
+null
+true
+
+
+[range (0; 100000) | random_8 | select ((. < 0) or (. > 255))] | unique
+null
+[]
+
+[range (0; 100000) | random_16 | select ((. < 0) or (. > 65535))] | unique
+null
+[]
+
+[range (0; 100000) | random_32 | select ((. < 0) or (. > 4294967295))] | unique
+null
+[]
+
+
+[range (0; 100000) | random_real | select ((. < 0.0) or (. > 1.0))] | unique
+null
+[]
+
+

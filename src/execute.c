@@ -780,13 +780,21 @@ jv jq_next(jq_state *jq) {
       typedef jv (*func_3)(jq_state*,jv,jv,jv);
       typedef jv (*func_4)(jq_state*,jv,jv,jv,jv);
       typedef jv (*func_5)(jq_state*,jv,jv,jv,jv,jv);
+      typedef jv (*func_6)(jq_state*,jv,jv,jv,jv,jv,jv);
+      typedef jv (*func_7)(jq_state*,jv,jv,jv,jv,jv,jv,jv);
+      typedef jv (*func_8)(jq_state*,jv,jv,jv,jv,jv,jv,jv,jv);
+      typedef jv (*func_9)(jq_state*,jv,jv,jv,jv,jv,jv,jv,jv,jv);
       switch (function->nargs) {
       case 1: top = ((func_1)function->fptr)(jq, in[0]); break;
       case 2: top = ((func_2)function->fptr)(jq, in[0], in[1]); break;
       case 3: top = ((func_3)function->fptr)(jq, in[0], in[1], in[2]); break;
       case 4: top = ((func_4)function->fptr)(jq, in[0], in[1], in[2], in[3]); break;
       case 5: top = ((func_5)function->fptr)(jq, in[0], in[1], in[2], in[3], in[4]); break;
-      // FIXME: a) up to 7 arguments (input + 6), b) should assert
+      case 6: top = ((func_6)function->fptr)(jq, in[0], in[1], in[2], in[3], in[4], in[5]); break;
+      case 7: top = ((func_7)function->fptr)(jq, in[0], in[1], in[2], in[3], in[4], in[5], in[6]); break;
+      case 8: top = ((func_8)function->fptr)(jq, in[0], in[1], in[2], in[3], in[4], in[5], in[6], in[7]); break;
+      case 9: top = ((func_9)function->fptr)(jq, in[0], in[1], in[2], in[3], in[4], in[5], in[6], in[7], in[8]); break;
+      // FIXME: a) up to 9 arguments (input + 8), b) should assert
       // because the compiler should not generate this error.
       default: return jv_invalid_with_msg(jv_string("Function takes too many arguments"));
       }
