@@ -68,8 +68,8 @@ static void usage(int code) {
 }
 
 static void die() {
-  fprintf(stderr, "Use %s --help for help with command-line options,\n", progname);
-  fprintf(stderr, "or see the jq manpage, or online docs  at https://stedolan.github.io/jq\n");
+  fprintf(stderr, "%s: Use %s --help for help with command-line options,\n", progname, progname);
+  fprintf(stderr, "%s: or see the jq manpage, or online docs  at https://stedolan.github.io/jq\n", progname);
   exit(2);
 }
 
@@ -124,7 +124,11 @@ static int process(jq_state *jq, jv value, int flags, int dumpopts) {
   jv result;
   while (jv_is_valid(result = jq_next(jq))) {
     if ((options & RAW_OUTPUT) && jv_get_kind(result) == JV_KIND_STRING) {
-      fwrite(jv_string_value(result), 1, jv_string_length_bytes(jv_copy(result)), stdout);
+      if (options & ASCII_OUTPUT) {
+        jv_dumpf(jv_copy(result), stdout, JV_PRINT_ASCII | JV_PRINT_ASCII0);
+      } else {
+        fwrite(jv_string_value(result), 1, jv_string_length_bytes(jv_copy(result)), stdout);
+      }
       ret = 0;
       jv_free(result);
     } else {
@@ -200,8 +204,7 @@ int main(int argc, char* argv[]) {
   jq = jq_init();
   if (jq == NULL) {
     perror("malloc");
-    ret = 2;
-    goto out;
+    exit(2);
   }
 
   int dumpopts = JV_PRINT_INDENT_FLAGS(2);
@@ -234,7 +237,7 @@ int main(int argc, char* argv[]) {
         if (argv[i][2] != 0) { // -Lname (faster check than strlen)
             lib_search_paths = jv_array_append(lib_search_paths, jq_realpath(jv_string(argv[i]+2)));
         } else if (i >= argc - 1) {
-          fprintf(stderr, "-L takes a parameter: (e.g. -L /search/path or -L/search/path)\n");
+          fprintf(stderr, "%s: -L takes a parameter: (e.g. -L /search/path or -L/search/path)\n", progname);
           die();
         } else {
           lib_search_paths = jv_array_append(lib_search_paths, jq_realpath(jv_string(argv[i+1])));
@@ -446,8 +449,8 @@ int main(int argc, char* argv[]) {
 
   char *origin = strdup(argv[0]);
   if (origin == NULL) {
-    fprintf(stderr, "Error: out of memory\n");
-    exit(1);
+    perror("malloc");
+    exit(2);
   }
   jq_set_attr(jq, jv_string("JQ_ORIGIN"), jv_string(dirname(origin)));
   free(origin);
@@ -536,11 +539,11 @@ int main(int argc, char* argv[]) {
       if (!(options & SEQ)) {
         // --seq -> errors are not fatal
         ret = 4;
-        fprintf(stderr, "parse error: %s\n", jv_string_value(msg));
+        fprintf(stderr, "%s: parse error: %s\n", progname, jv_string_value(msg));
         jv_free(msg);
         break;
       }
-      fprintf(stderr, "ignoring parse error: %s\n", jv_string_value(msg));
+      fprintf(stderr, "%s: ignoring parse error: %s\n", progname, jv_string_value(msg));
       jv_free(msg);
     }
   }
@@ -551,7 +554,7 @@ int main(int argc, char* argv[]) {
 out:
   badwrite = ferror(stdout);
   if (fclose(stdout)!=0 || badwrite) {
-    fprintf(stderr,"Error: writing output failed: %s\n", strerror(errno));
+    fprintf(stderr, "%s: Error: writing output failed: %s\n", progname, strerror(errno));
     ret = 2;
   }
 
