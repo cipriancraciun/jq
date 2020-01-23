@@ -24,10 +24,12 @@ typedef struct jv_refcnt {
 static const jv_refcnt JV_REFCNT_INIT = {1};
 
 static void jvp_refcnt_inc(jv_refcnt* c) {
+  assert(c->count > 0);
   c->count++;
 }
 
 static int jvp_refcnt_dec(jv_refcnt* c) {
+  assert(c->count > 0);
   c->count--;
   return c->count == 0;
 }
@@ -184,7 +186,7 @@ static jvp_array* jvp_array_ptr(jv a) {
 
 static jvp_array* jvp_array_alloc(unsigned size) {
   jvp_array* a = jv_mem_alloc(sizeof(jvp_array) + sizeof(jv) * size);
-  a->refcnt.count = 1;
+  a->refcnt = JV_REFCNT_INIT;
   a->length = 0;
   a->alloc_length = size;
   return a;
@@ -383,6 +385,8 @@ jv jv_array_slice(jv a, int start, int end) {
 }
 
 int jv_array_contains(jv a, jv b) {
+  assert(jv_get_kind(a) == JV_KIND_ARRAY);
+  assert(jv_get_kind(b) == JV_KIND_ARRAY);
   int r = 1;
   jv_array_foreach(b, bi, belem) {
     int ri = 0;
@@ -404,6 +408,8 @@ int jv_array_contains(jv a, jv b) {
 }
 
 jv jv_array_indexes(jv a, jv b) {
+  assert(jv_get_kind(a) == JV_KIND_ARRAY);
+  assert(jv_get_kind(b) == JV_KIND_ARRAY);
   jv res = jv_array();
   int idx = -1;
   jv_array_foreach(a, ai, aelem) {
@@ -415,10 +421,14 @@ jv jv_array_indexes(jv a, jv b) {
         idx = -1;
       else if (bi == 0 && idx == -1)
         idx = ai;
+      jv_free(belem);
+      if (idx == -1)
+        break;
     }
     if (idx > -1)
       res = jv_array_append(res, jv_number(idx));
     idx = -1;
+    jv_free(aelem);
   }
   jv_free(a);
   jv_free(b);
@@ -447,7 +457,7 @@ static jvp_string* jvp_string_ptr(jv a) {
 
 static jvp_string* jvp_string_alloc(uint32_t size) {
   jvp_string* s = jv_mem_alloc(sizeof(jvp_string) + size + 1);
-  s->refcnt.count = 1;
+  s->refcnt = JV_REFCNT_INIT;
   s->alloc_length = size;
   return s;
 }
@@ -882,7 +892,7 @@ static jv jvp_object_new(int size) {
   jvp_object* obj = jv_mem_alloc(sizeof(jvp_object) +
                                  sizeof(struct object_slot) * size +
                                  sizeof(int) * (size * 2));
-  obj->refcnt.count = 1;
+  obj->refcnt = JV_REFCNT_INIT;
   for (int i=0; i<size; i++) {
     obj->elements[i].next = i - 1;
     obj->elements[i].string = JV_NULL;
