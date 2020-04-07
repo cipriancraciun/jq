@@ -255,11 +255,31 @@ jv jqe_lmdb_read_one_0 (jqe_lmdb * lmdb, jv key, jv on_missing, bool encode)
 	
 	unsigned int lmdb_transaction_flags = MDB_RDONLY;
 	
-	mdb_outcome = mdb_txn_begin (lmdb->environment, NULL, lmdb_transaction_flags, &lmdb_transaction);
-	if (mdb_outcome != 0) {
-		jv_free (outcome);
-		outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_read` failed:  error encountered while beginning transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
-		goto exit;
+	for (int i = 0; true; i++) {
+		mdb_outcome = mdb_txn_begin (lmdb->environment, NULL, lmdb_transaction_flags, &lmdb_transaction);
+		if (mdb_outcome == 0)
+			break;
+		else if (mdb_outcome == MDB_READERS_FULL) {
+			if (i < 16) {
+				int cleared_slots = 0;
+				mdb_outcome = mdb_reader_check (lmdb->environment, &cleared_slots);
+				if (mdb_outcome == 0) {
+					continue;
+				} else {
+					jv_free (outcome);
+					outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_read` failed:  error encountered while checking readers  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+					goto exit;
+				}
+			} else {
+				jv_free (outcome);
+				outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_read` failed:  error encountered while beginning transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+				goto exit;
+			}
+		} else {
+			jv_free (outcome);
+			outcome = jv_invalid_with_msg (jv_string_fmt ("`jqe_lmdb_read` failed:  error encountered while beginning transaction  (LMDB: `%d` / `%s`)", mdb_outcome, mdb_strerror (mdb_outcome)));
+			goto exit;
+		}
 	}
 	
 	jv_free (outcome);
