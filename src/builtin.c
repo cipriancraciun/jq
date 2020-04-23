@@ -1561,6 +1561,8 @@ static jv f_current_line(jq_state *jq, jv a) {
   return jq_util_input_get_current_line(jq);
 }
 
+#include "_extensions/all.h"
+
 #define LIBM_DD(name) \
   {(cfunction_ptr)f_ ## name,  #name, 1},
 #define LIBM_DD_NO(name)
@@ -1584,6 +1586,7 @@ static const struct cfunction function_list[] = {
 #ifdef HAVE_LGAMMA_R
   {(cfunction_ptr)f_lgamma_r,"lgamma_r", 1},
 #endif
+#include "_extensions/all_builtins.h"
   {(cfunction_ptr)f_plus, "_plus", 3},
   {(cfunction_ptr)f_negate, "_negate", 1},
   {(cfunction_ptr)f_minus, "_minus", 3},
@@ -1720,6 +1723,7 @@ static const char* const jq_builtins =
 #define LIBM_DDD_NO(name) "def " #name "(a;b): \"Error: " #name "/2 not found at build time\"|error;"
 #define LIBM_DDDD_NO(name) "def " #name "(a;b;c): \"Error: " #name "/3 not found at build time\"|error;"
 #include "libm.h"
+#include "_extensions/all_builtins_jq.h"
 #ifndef HAVE_FREXP
   "def frexp: \"Error: frexp/0 not found found at build time\"|error;"
 #endif
@@ -1731,7 +1735,6 @@ static const char* const jq_builtins =
 #endif
 ;
 
-#undef LIBM_DDDD_NO
 #undef LIBM_DDD_NO
 #undef LIBM_DD_NO
 #undef LIBM_DDDD
