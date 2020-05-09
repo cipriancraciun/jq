@@ -66,10 +66,11 @@
 
 #include <assert.h>
 #include <math.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <string.h>
 #include "compile.h"
 #include "jv_alloc.h"
+#include "jq_io.h"
 #define YYMALLOC jv_mem_alloc
 #define YYFREE jv_mem_free
 

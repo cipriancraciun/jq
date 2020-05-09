@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <float.h>
 #include <string.h>
 
@@ -13,6 +13,7 @@
 #include "jv_dtoa.h"
 #include "jv_unicode.h"
 #include "jv_alloc.h"
+#include "jq_io.h"
 
 #ifndef MAX_PRINT_DEPTH
 #define MAX_PRINT_DEPTH (256)

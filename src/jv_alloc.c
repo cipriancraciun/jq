@@ -1,7 +1,8 @@
 #include <stdlib.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <string.h>
 #include "jv_alloc.h"
+#include "jq_io.h"
 
 struct nomem_handler {
     jv_nomem_handler_f handler;

@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdarg.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <sys/stat.h>
@@ -18,6 +18,7 @@
 #include "builtin.h"
 #include "util.h"
 #include "linker.h"
+#include "jq_io.h"
 
 struct jq_state {
   void (*nomem_handler)(void *);

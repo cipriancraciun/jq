@@ -2,11 +2,12 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <string.h>
 #include "jq.h"
 #include "jv_alloc.h"
 #include "locfile.h"
+#include "jq_io.h"
 
 
 struct locfile* locfile_init(jq_state *jq, const char *fname, const char* data, int length) {

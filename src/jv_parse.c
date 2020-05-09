@@ -1,4 +1,4 @@
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -7,6 +7,7 @@
 #include "jv_unicode.h"
 #include "jv_alloc.h"
 #include "jv_dtoa.h"
+#include "jq_io.h"
 
 typedef const char* presult;
 

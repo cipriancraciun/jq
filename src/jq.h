@@ -1,8 +1,9 @@
 #ifndef JQ_H
 #define JQ_H
 
-#include <stdio.h>
+//#include <stdio.h>
 #include "jv.h"
+#include "jq_io.h"
 
 enum {
   JQ_DEBUG_TRACE = 1,

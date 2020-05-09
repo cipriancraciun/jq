@@ -29,7 +29,7 @@ void *alloca (size_t);
 # endif
 #endif
 #ifndef WIN32
-#include <pwd.h>
+//#include <pwd.h>
 #endif
 
 #ifdef WIN32

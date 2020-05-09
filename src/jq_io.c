@@ -109,7 +109,7 @@ size_t fread (void *ptr, size_t size, size_t nmemb, _JQ_FILE *stream) {
 }
 
 
-int fwrite (const void *ptr, size_t size, size_t nmemb, _JQ_FILE *stream) {
+size_t fwrite (const void *ptr, size_t size, size_t nmemb, _JQ_FILE *stream) {
 	if (stream->eof || stream->err)
 		return 0;
 	size_t limit = size * nmemb;

@@ -3,7 +3,8 @@
 
 #include <stdarg.h>
 #include <stdint.h>
-#include <stdio.h>
+//#include <stdio.h>
+#include "jq_io.h"
 
 typedef enum {
   JV_KIND_INVALID,

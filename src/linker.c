@@ -2,7 +2,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <string.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <sys/stat.h>
@@ -20,6 +20,7 @@
 #include "util.h"
 #include "compile.h"
 #include "jv_alloc.h"
+#include "jq_io.h"
 
 struct lib_loading_state {
   char **names;

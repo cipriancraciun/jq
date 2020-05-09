@@ -29,7 +29,7 @@ _JQ_FILE_EXTERN int ferror (FILE *stream);
 _JQ_FILE_EXTERN void clearerr (FILE *stream);
 
 _JQ_FILE_EXTERN size_t fread (void *ptr, size_t size, size_t nmemb, FILE *stream);
-_JQ_FILE_EXTERN int fwrite (const void *ptr, size_t size, size_t nmemb, FILE *stream);
+_JQ_FILE_EXTERN size_t fwrite (const void *ptr, size_t size, size_t nmemb, FILE *stream);
 _JQ_FILE_EXTERN int fflush (FILE *stream);
 
 #define getc fgetc

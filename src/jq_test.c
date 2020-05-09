@@ -1,10 +1,11 @@
 #include <assert.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include "jv.h"
 #include "jq.h"
+#include "jq_io.h"
 
 static void jv_test();
 static void run_jq_tests(jv, int, FILE *);

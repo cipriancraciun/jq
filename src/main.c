@@ -3,7 +3,7 @@
 #include <errno.h>
 #include <libgen.h>
 #include <stdlib.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -32,6 +32,7 @@
 #include "jv_alloc.h"
 #include "util.h"
 #include "src/version.h"
+#include "jq_io.h"
 
 int jq_testsuite(jv lib_dirs, int verbose, int argc, char* argv[]);
 

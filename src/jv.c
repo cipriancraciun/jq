@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <assert.h>
 #include <stdlib.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
 #include <limits.h>
@@ -12,6 +12,7 @@
 #include "jv.h"
 #include "jv_unicode.h"
 #include "util.h"
+#include "jq_io.h"
 
 /*
  * Internal refcounting helpers

@@ -2,12 +2,13 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include "jv.h"
 #include "jv_unicode.h"
+#include "jq_io.h"
 
 jv jv_load_file(const char* filename, int raw) {
   struct stat sb;

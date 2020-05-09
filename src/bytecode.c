@@ -1,9 +1,10 @@
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 
 #include "bytecode.h"
 #include "jv_alloc.h"
+#include "jq_io.h"
 
 // flags, length
 #define NONE 0, 1

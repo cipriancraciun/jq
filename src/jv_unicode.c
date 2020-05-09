@@ -1,7 +1,8 @@
-#include <stdio.h>
+//#include <stdio.h>
 #include <assert.h>
 #include "jv_unicode.h"
 #include "jv_utf8_tables.h"
+#include "jq_io.h"
 
 // jvp_utf8_backtrack returns the beginning of the last codepoint in the
 // string, assuming that start is the last byte in the string.
