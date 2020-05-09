@@ -268,7 +268,7 @@ int main(int argc, char* argv[]) {
 
   jq = jq_init();
   if (jq == NULL) {
-    perror("malloc");
+    fprintf(stderr, "malloc");
     exit(2);
   }
 
@@ -496,7 +496,7 @@ int main(int argc, char* argv[]) {
         if (!short_opts) continue;
       }
       if (isoption(argv[i], 'V', "version", &short_opts)) {
-        printf("jq-%s\n", JQ_VERSION);
+        fprintf(stdout, "jq-%s\n", JQ_VERSION);
         ret = 0;
         goto out;
       }
@@ -546,7 +546,7 @@ int main(int argc, char* argv[]) {
 
   char *origin = strdup(argv[0]);
   if (origin == NULL) {
-    perror("malloc");
+    fprintf(stderr, "malloc");
     exit(2);
   }
   jq_set_attr(jq, jv_string("JQ_ORIGIN"), jv_string(dirname(origin)));
@@ -567,7 +567,7 @@ int main(int argc, char* argv[]) {
   if (options & FROM_FILE) {
     char *program_origin = strdup(program);
     if (program_origin == NULL) {
-      perror("malloc");
+      fprintf(stderr, "malloc");
       exit(2);
     }
 
@@ -600,7 +600,7 @@ int main(int argc, char* argv[]) {
 
   if (options & DUMP_DISASM) {
     jq_dump_disassembly(jq, 0);
-    printf("\n");
+    fprintf(stderr, "\n");
   }
 
   if ((options & SEQ))
