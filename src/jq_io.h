@@ -36,6 +36,10 @@ _JQ_FILE_EXTERN int fflush (FILE *stream);
 _JQ_FILE_EXTERN int fgetc (FILE *stream);
 _JQ_FILE_EXTERN char *fgets (char *s, int size, FILE *stream);
 
+#define putc fputc
+_JQ_FILE_EXTERN int fputc (int c, FILE *stream);
+_JQ_FILE_EXTERN int fputs (const char *s, FILE *stream);
+
 _JQ_FILE_EXTERN int fprintf (FILE *stream, const char *format, ...);
 
 _JQ_FILE_EXTERN FILE *stdin;

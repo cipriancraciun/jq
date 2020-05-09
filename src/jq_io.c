@@ -155,7 +155,47 @@ int fgetc (_JQ_FILE *stream) {
 char *fgets (char *s, int size, _JQ_FILE *stream) {
 	if (stream->eof || stream->err)
 		return NULL;
-	int ret = read (stream->fd, s, size - 1);
+	size_t limit = size - 1;
+	size_t offset = 0;
+	while (offset < limit) {
+		if (s[offset - 1] == '\n') {
+			break;
+		}
+		int ret = read (stream->fd, s + offset, 1);
+		if (ret == 0) {
+			stream->eof = 1;
+			break;
+		} else if (ret <= -1) {
+			stream->err = errno;
+			break;
+		} else {
+			offset += ret;
+		}
+	}
+	s[offset] = '\0';
+	return s;
+}
+
+
+int fputc (char c, _JQ_FILE *stream) {
+	if (stream->eof || stream->err)
+		return 0;
+	int ret = write (stream->fd, &c, 1);
+	if (ret == 0) {
+		stream->eof = 1;
+		return EOF;
+	} else if (ret <= -1) {
+		stream->err = errno;
+		return EOF;
+	}
+	return ret;
+}
+
+int fputs (char *s, _JQ_FILE *stream) {
+	if (stream->eof || stream->err)
+		return NULL;
+	int size = strlen (s);
+	int ret = write (stream->fd, s, size);
 	if (ret == 0) {
 		stream->eof = 1;
 		return NULL;
@@ -163,8 +203,7 @@ char *fgets (char *s, int size, _JQ_FILE *stream) {
 		stream->err = errno;
 		return NULL;
 	}
-	s[ret] = '\0';
-	return s;
+	return ret;
 }
 
 
