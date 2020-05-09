@@ -227,6 +227,13 @@ int fprintf (_JQ_FILE *stream, const char *format, ...) {
 
 
 
+int isatty (int stream) {
+	return 0;
+}
+
+
+
+
 void jq_exit(int status) {
 	while (1) {
 		syscall (SYS_exit, status);

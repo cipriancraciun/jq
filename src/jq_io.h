@@ -46,6 +46,8 @@ _JQ_FILE_EXTERN FILE *stdin;
 _JQ_FILE_EXTERN FILE *stdout;
 _JQ_FILE_EXTERN FILE *stderr;
 
+_JQ_FILE_EXTERN int isatty (int stream);
+
 
 
 
