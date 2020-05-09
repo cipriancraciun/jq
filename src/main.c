@@ -28,6 +28,7 @@
 
 #include <sys/prctl.h>
 #include <linux/seccomp.h>
+#include <seccomp.h>
 
 #include "compile.h"
 #include "jv.h"
@@ -108,11 +109,35 @@ static void die() {
 
 
 static void enter_seccomp() {
+
+  // NOTE:  Needed to disable searching for libraries!
   unsetenv("HOME");
-  if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT)) {
-    jq_exit(99);
+
+  if (1) {
+
+    scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL_PROCESS);
+    if (ctx == NULL)
+      jq_exit(99);
+
+    int nok = 0;
+    nok |= seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(exit), 0);
+    nok |= seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(read), 1, SCMP_A0_32(SCMP_CMP_EQ, 0));
+    nok |= seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0_32(SCMP_CMP_EQ, 1));
+    nok |= seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 1, SCMP_A0_32(SCMP_CMP_EQ, 2));
+    nok |= seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(brk), 0);
+    if (nok)
+      jq_exit(99);
+
+    if (seccomp_load(ctx))
+      jq_exit(99);
+
+  } else {
+
+    // NOTE:  Should work except for the `brk` syscall!
+    if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT)) {
+      jq_exit(99);
+    }
   }
-  fprintf(stderr, "enabled seccomp!\n");
 }
 
 
@@ -252,10 +277,17 @@ static void debug_cb(void *data, jv input) {
 }
 
 int main(int argc, char* argv[]) {
+
+  // NOTE:  Enable `seccomp` early to identify other `syscalls` before compiling!
+  if (0) {
+    enter_seccomp();
+  }
+
   jq_state *jq = NULL;
   int ret = 0;
   int compiled = 0;
   int parser_flags = 0;
+  int seccomp_flag = 0;
   int nfiles = 0;
   int badwrite;
   jv ARGS = jv_array(); /* positional arguments */
@@ -296,7 +328,6 @@ int main(int argc, char* argv[]) {
   int further_args_are_json = 0;
   int args_done = 0;
   int jq_flags = 0;
-  int seccomp_flag = 1;
   size_t short_opts = 0;
   jv lib_search_paths = jv_null();
   for (int i=1; i<argc; i++, short_opts = 0) {
@@ -505,6 +536,10 @@ int main(int argc, char* argv[]) {
       }
       if (isoption(argv[i],  0,  "debug-trace", &short_opts)) {
         jq_flags |= JQ_DEBUG_TRACE;
+        continue;
+      }
+      if (isoption(argv[i], 0, "seccomp", &short_opts)) {
+        seccomp_flag = 1;
         continue;
       }
       if (isoption(argv[i], 'h', "help", &short_opts)) {
