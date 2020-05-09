@@ -26,6 +26,9 @@
 #define USE_ISATTY
 #endif
 
+#include <sys/prctl.h>
+#include <linux/seccomp.h>
+
 #include "compile.h"
 #include "jv.h"
 #include "jq.h"
@@ -99,6 +102,17 @@ static void die() {
   fprintf(stderr, "%s: Use %s --help for help with command-line options,\n", progname, progname);
   fprintf(stderr, "%s: or see the jq manpage, or online docs  at https://stedolan.github.io/jq\n", progname);
   jq_exit(2);
+}
+
+
+
+
+static void enter_seccomp() {
+  unsetenv("HOME");
+  if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT)) {
+    jq_exit(99);
+  }
+  fprintf(stderr, "enabled seccomp!\n");
 }
 
 
@@ -282,6 +296,7 @@ int main(int argc, char* argv[]) {
   int further_args_are_json = 0;
   int args_done = 0;
   int jq_flags = 0;
+  int seccomp_flag = 1;
   size_t short_opts = 0;
   jv lib_search_paths = jv_null();
   for (int i=1; i<argc; i++, short_opts = 0) {
@@ -584,6 +599,8 @@ int main(int argc, char* argv[]) {
     ARGS = JV_OBJECT(jv_string("positional"), ARGS,
                      jv_string("named"), jv_copy(program_arguments));
     program_arguments = jv_object_set(program_arguments, jv_string("ARGS"), jv_copy(ARGS));
+    if (seccomp_flag)
+      enter_seccomp();
     compiled = jq_compile_args(jq, skip_shebang(jv_string_value(data)), jv_copy(program_arguments));
     free(program_origin);
     jv_free(data);
@@ -592,6 +609,8 @@ int main(int argc, char* argv[]) {
     ARGS = JV_OBJECT(jv_string("positional"), ARGS,
                      jv_string("named"), jv_copy(program_arguments));
     program_arguments = jv_object_set(program_arguments, jv_string("ARGS"), jv_copy(ARGS));
+    if (seccomp_flag)
+      enter_seccomp();
     compiled = jq_compile_args(jq, program, jv_copy(program_arguments));
   }
   if (!compiled){
