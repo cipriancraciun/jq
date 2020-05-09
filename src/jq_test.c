@@ -18,7 +18,7 @@ int jq_testsuite(jv libdirs, int verbose, int argc, char* argv[]) {
     testdata = fopen(argv[0], "r");
     if (!testdata) {
       fprintf(stderr, "fopen: %s", strerror(errno));
-      exit(1);
+      jq_exit(1);
     }
   }
   run_jq_tests(libdirs, verbose, testdata);
@@ -182,7 +182,7 @@ static void run_jq_tests(jv lib_dirs, int verbose, FILE *testdata) {
   }
   jq_teardown(&jq);
   fprintf(stderr, "%d of %d tests passed (%d malformed)\n", passed,tests,invalid);
-  if (passed != tests) exit(1);
+  if (passed != tests) jq_exit(1);
 }
 
 

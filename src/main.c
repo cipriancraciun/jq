@@ -92,13 +92,13 @@ static void usage(int code, int keep_it_short) {
       "positional arguments are available as $ARGS.positional[].\n"
       "\nSee the manpage for more options.\n");
   }
-  exit((ret < 0 && code == 0) ? 2 : code);
+  jq_exit((ret < 0 && code == 0) ? 2 : code);
 }
 
 static void die() {
   fprintf(stderr, "%s: Use %s --help for help with command-line options,\n", progname, progname);
   fprintf(stderr, "%s: or see the jq manpage, or online docs  at https://stedolan.github.io/jq\n", progname);
-  exit(2);
+  jq_exit(2);
 }
 
 
@@ -163,7 +163,7 @@ static const char *skip_shebang(const char *p) {
 }
 
 static int process(jq_state *jq, jv value, int flags, int dumpopts) {
-  int ret = 14; // No valid results && -e -> exit(4)
+  int ret = 14; // No valid results && -e -> jq_exit(4)
   jq_start(jq, value, flags);
   jv result;
   while (jv_is_valid(result = jq_next(jq))) {
@@ -270,7 +270,7 @@ int main(int argc, char* argv[]) {
   jq = jq_init();
   if (jq == NULL) {
     fprintf(stderr, "malloc");
-    exit(2);
+    jq_exit(2);
   }
 
   int dumpopts = JV_PRINT_INDENT_FLAGS(2);
@@ -548,7 +548,7 @@ int main(int argc, char* argv[]) {
   char *origin = strdup(argv[0]);
   if (origin == NULL) {
     fprintf(stderr, "malloc");
-    exit(2);
+    jq_exit(2);
   }
   jq_set_attr(jq, jv_string("JQ_ORIGIN"), jv_string(dirname(origin)));
   free(origin);
@@ -569,7 +569,7 @@ int main(int argc, char* argv[]) {
     char *program_origin = strdup(program);
     if (program_origin == NULL) {
       fprintf(stderr, "malloc");
-      exit(2);
+      jq_exit(2);
     }
 
     jv data = jv_load_file(program, 1);
@@ -661,8 +661,8 @@ out:
   jq_util_input_free(&input_state);
   jq_teardown(&jq);
   if (ret >= 10 && (options & EXIT_STATUS))
-    return ret - 10;
+    jq_exit(ret - 10);
   if (ret >= 10 && !(options & EXIT_STATUS_EXACT))
-    return 0;
-  return ret;
+    jq_exit(0);
+  jq_exit(ret);
 }

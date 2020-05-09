@@ -209,7 +209,7 @@ typedef unsigned Long ULong;
 
 #ifdef DEBUG
 #include "stdio.h"
-#define Bug(x) {fprintf(stderr, "%s\n", x); exit(1);}
+#define Bug(x) {fprintf(stderr, "%s\n", x); jq_exit(1);}
 #endif
 
 #include "stdlib.h"
